@@ -1,0 +1,11 @@
+{
+  "Stephen Curry": {
+    "sample_count": 1,
+    "metrics": {
+      "Elbow angle": 179.58221435546875,
+      "Shoulder angle": 152.72398376464844,
+      "Hip angle": 175.92359924316406,
+      "Knee angle": 177.1888885498047
+    }
+  }
+}
