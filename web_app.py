@@ -104,6 +104,7 @@ class ShotMetrics:
 class AnalysisResult:
     metrics: Optional[ShotMetrics] = None
     release_frame: Optional[np.ndarray] = None
+    release_frame_index: int = -1
     frames_scanned: int = 0
     error: str = ""
     detail: str = ""
@@ -260,7 +261,7 @@ def analyze_video(video_path: Path, max_frames: int = 240, render_height: int = 
 
         fps = float(cap.get(cv2.CAP_PROP_FPS) or 30.0)
         detector = create_pose_detector(fps=fps)
-        candidates: List[Tuple[float, ShotMetrics, np.ndarray]] = []
+        candidates: List[Tuple[float, int, ShotMetrics, np.ndarray]] = []
         frames_scanned = 0
 
         while frames_scanned < max_frames:
@@ -273,14 +274,19 @@ def analyze_video(video_path: Path, max_frames: int = 240, render_height: int = 
                 height, width = frame.shape[:2]
                 metrics, wrist_y = collect_metrics(landmarks, width, height)
                 if metrics is not None:
-                    candidates.append((wrist_y, metrics, draw_pose(frame.copy(), landmarks)))
+                    candidates.append((wrist_y, frames_scanned, metrics, draw_pose(frame.copy(), landmarks)))
             frames_scanned += 1
 
         if not candidates:
             return AnalysisResult(error="No reliable pose was detected.", frames_scanned=frames_scanned)
 
-        _, metrics, release_frame = min(candidates, key=lambda item: item[0])
-        return AnalysisResult(metrics=metrics, release_frame=release_frame, frames_scanned=frames_scanned)
+        _, release_frame_index, metrics, release_frame = min(candidates, key=lambda item: item[0])
+        return AnalysisResult(
+            metrics=metrics,
+            release_frame=release_frame,
+            release_frame_index=release_frame_index,
+            frames_scanned=frames_scanned,
+        )
     except Exception as exc:
         return AnalysisResult(error=f"{type(exc).__name__}: {exc}", detail=traceback.format_exc(limit=8))
     finally:
@@ -313,6 +319,169 @@ def compare_rows(user: ShotMetrics, reference: ShotMetrics, reference_name: str)
             }
         )
     return pd.DataFrame(rows)
+
+
+def safe_metric_text(metrics: ShotMetrics, reference_name: str) -> List[str]:
+    values = metrics.to_dict()
+    return [
+        f"{reference_name}",
+        f"Elbow: {values['Elbow']:.1f} deg",
+        f"Shoulder: {values['Shoulder']:.1f} deg",
+        f"Hip: {values['Hip']:.1f} deg",
+        f"Knee: {values['Knee']:.1f} deg",
+    ]
+
+
+def draw_overlay_lines(frame: np.ndarray, lines: List[str], origin: Tuple[int, int]) -> None:
+    x, y = origin
+    cv2.rectangle(frame, (x - 12, y - 32), (x + 330, y + 26 * len(lines)), (20, 26, 24), -1)
+    for i, line in enumerate(lines):
+        color = (255, 255, 255) if i == 0 else (225, 238, 232)
+        cv2.putText(frame, line, (x, y + i * 26), cv2.FONT_HERSHEY_SIMPLEX, 0.62, color, 2, cv2.LINE_AA)
+
+
+def make_saved_model_comparison_video(
+    user_path: Path,
+    user_result: AnalysisResult,
+    reference_metrics: ShotMetrics,
+    reference_name: str,
+    max_frames: int,
+    window: int = 24,
+    slow_factor: int = 3,
+    render_height: int = 540,
+) -> Tuple[Optional[Path], str]:
+    cap = None
+    detector = None
+    try:
+        cap = cv2.VideoCapture(str(user_path))
+        if not cap.isOpened():
+            return None, "Could not open your clip for video rendering."
+
+        fps = float(cap.get(cv2.CAP_PROP_FPS) or 30.0)
+        detector = create_pose_detector(fps=fps)
+        frames: List[np.ndarray] = []
+        frame_index = 0
+        center = user_result.release_frame_index if user_result.release_frame_index >= 0 else 0
+        start = max(0, center - window)
+        end = min(max_frames, center + window + 1)
+
+        while frame_index < end:
+            ok, frame = cap.read()
+            if not ok:
+                break
+            if frame_index >= start:
+                frame = resize_to_height(frame, render_height)
+                landmarks = detect_primary_pose(frame, detector)
+                user_metrics = None
+                if landmarks is not None:
+                    height, width = frame.shape[:2]
+                    user_metrics, _ = collect_metrics(landmarks, width, height)
+                    draw_pose(frame, landmarks)
+
+                left = frame.copy()
+                right = frame.copy()
+                overlay = right.copy()
+                cv2.addWeighted(overlay, 0.25, right, 0.75, 0, right)
+
+                if user_metrics is not None:
+                    draw_overlay_lines(left, safe_metric_text(user_metrics, "Your shot"), (24, 48))
+                draw_overlay_lines(right, safe_metric_text(reference_metrics, reference_name), (24, 48))
+                cv2.putText(left, "YOUR RELEASE MOTION", (24, left.shape[0] - 28), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (255, 255, 255), 2, cv2.LINE_AA)
+                cv2.putText(right, "SAVED MODEL TARGET", (24, right.shape[0] - 28), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (255, 255, 255), 2, cv2.LINE_AA)
+                frames.append(np.hstack([left, right]))
+            frame_index += 1
+
+        if not frames:
+            return None, "No frames were available for rendering."
+
+        out_path = Path(tempfile.NamedTemporaryFile(delete=False, suffix=".mp4").name)
+        height, width = frames[0].shape[:2]
+        writer = cv2.VideoWriter(str(out_path), cv2.VideoWriter_fourcc(*"mp4v"), max(8.0, fps / slow_factor), (width, height))
+        if not writer.isOpened():
+            return None, "Could not open video writer."
+        for frame in frames:
+            for _ in range(slow_factor):
+                writer.write(frame)
+        writer.release()
+        return out_path, ""
+    except Exception as exc:
+        return None, f"{type(exc).__name__}: {exc}"
+    finally:
+        if cap is not None:
+            cap.release()
+        if detector is not None:
+            close_detector(detector)
+
+
+def make_reference_clip_comparison_video(
+    user_path: Path,
+    user_result: AnalysisResult,
+    reference_path: Path,
+    reference_result: AnalysisResult,
+    max_frames: int,
+    window: int = 24,
+    slow_factor: int = 3,
+    render_height: int = 540,
+) -> Tuple[Optional[Path], str]:
+    def collect_window(path: Path, center: int) -> Tuple[List[np.ndarray], str]:
+        cap = None
+        detector = None
+        frames: List[np.ndarray] = []
+        try:
+            cap = cv2.VideoCapture(str(path))
+            if not cap.isOpened():
+                return [], "Could not open a clip for rendering."
+            fps = float(cap.get(cv2.CAP_PROP_FPS) or 30.0)
+            detector = create_pose_detector(fps=fps)
+            start = max(0, center - window)
+            end = min(max_frames, center + window + 1)
+            idx = 0
+            while idx < end:
+                ok, frame = cap.read()
+                if not ok:
+                    break
+                if idx >= start:
+                    frame = resize_to_height(frame, render_height)
+                    landmarks = detect_primary_pose(frame, detector)
+                    if landmarks is not None:
+                        draw_pose(frame, landmarks)
+                    frames.append(frame)
+                idx += 1
+            return frames, ""
+        except Exception as exc:
+            return [], f"{type(exc).__name__}: {exc}"
+        finally:
+            if cap is not None:
+                cap.release()
+            if detector is not None:
+                close_detector(detector)
+
+    left_frames, left_error = collect_window(user_path, user_result.release_frame_index)
+    right_frames, right_error = collect_window(reference_path, reference_result.release_frame_index)
+    if left_error or right_error:
+        return None, left_error or right_error
+    if not left_frames or not right_frames:
+        return None, "No frames were available for rendering."
+
+    count = min(len(left_frames), len(right_frames))
+    frames = []
+    for i in range(count):
+        left = left_frames[i]
+        right = right_frames[i]
+        cv2.putText(left, "YOUR CLIP", (24, 42), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 255), 2, cv2.LINE_AA)
+        cv2.putText(right, "REFERENCE CLIP", (24, 42), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 255), 2, cv2.LINE_AA)
+        frames.append(np.hstack([left, right]))
+
+    out_path = Path(tempfile.NamedTemporaryFile(delete=False, suffix=".mp4").name)
+    height, width = frames[0].shape[:2]
+    writer = cv2.VideoWriter(str(out_path), cv2.VideoWriter_fourcc(*"mp4v"), 10.0, (width, height))
+    if not writer.isOpened():
+        return None, "Could not open video writer."
+    for frame in frames:
+        for _ in range(slow_factor):
+            writer.write(frame)
+    writer.release()
+    return out_path, ""
 
 
 def inject_theme() -> None:
@@ -480,21 +649,33 @@ def analyze_tab(models: Dict[str, Dict], max_frames: int) -> None:
     left, right = st.columns([1.05, 0.95])
     with left:
         st.markdown('<div class="panel"><h3>Your clip</h3>', unsafe_allow_html=True)
-        user_video = st.file_uploader("Your clip", type=VIDEO_TYPES, label_visibility="collapsed")
+        user_video = st.file_uploader(
+            "Your clip",
+            type=VIDEO_TYPES,
+            label_visibility="collapsed",
+            key="analyze_user_video",
+        )
         st.markdown("</div>", unsafe_allow_html=True)
     with right:
         st.markdown('<div class="panel"><h3>Reference</h3>', unsafe_allow_html=True)
-        source = st.radio("Reference source", ["Saved model", "Reference clip"], horizontal=True, label_visibility="collapsed")
+        source = st.radio(
+            "Reference source",
+            ["Saved model", "Reference clip"],
+            horizontal=True,
+            label_visibility="collapsed",
+            key="analyze_reference_source",
+        )
         selected_model = None
         reference_video = None
         if source == "Saved model":
             names = sorted(models.keys())
-            selected_model = st.selectbox("Player model", names if names else ["<none>"])
+            selected_model = st.selectbox("Player model", names if names else ["<none>"], key="analyze_model_select")
         else:
-            reference_video = st.file_uploader("Reference video", type=VIDEO_TYPES)
+            reference_video = st.file_uploader("Reference video", type=VIDEO_TYPES, key="analyze_reference_video")
         st.markdown("</div>", unsafe_allow_html=True)
 
-    if not st.button("Analyze form", type="primary"):
+    render_video = st.checkbox("Create slow-motion comparison video", value=True, key="render_comparison_video")
+    if not st.button("Analyze form", type="primary", key="analyze_form_button"):
         return
     if user_video is None:
         st.warning("Upload your clip first.")
@@ -508,13 +689,16 @@ def analyze_tab(models: Dict[str, Dict], max_frames: int) -> None:
             if not selected_model or selected_model == "<none>" or selected_model not in models:
                 show_error("Choose a saved model or upload a reference clip.")
                 return
-            reference_result = AnalysisResult(metrics=ShotMetrics.from_dict(models[selected_model]["metrics"]))
+            reference_metrics = ShotMetrics.from_dict(models[selected_model]["metrics"])
+            reference_result = AnalysisResult(metrics=reference_metrics)
             reference_name = selected_model
+            reference_path = None
         else:
             if reference_video is None:
                 show_error("Upload a reference clip.")
                 return
-            reference_result = analyze_video(save_upload(reference_video), max_frames=max_frames)
+            reference_path = save_upload(reference_video)
+            reference_result = analyze_video(reference_path, max_frames=max_frames)
             reference_name = "Reference clip"
 
     if not user_result.ok:
@@ -525,15 +709,46 @@ def analyze_tab(models: Dict[str, Dict], max_frames: int) -> None:
         return
 
     render_results(user_result, reference_result, reference_name)
+    if render_video:
+        with st.spinner("Rendering slow-motion comparison video..."):
+            if source == "Saved model":
+                comparison_path, render_error = make_saved_model_comparison_video(
+                    user_path,
+                    user_result,
+                    reference_result.metrics,
+                    reference_name,
+                    max_frames=max_frames,
+                )
+            else:
+                comparison_path, render_error = make_reference_clip_comparison_video(
+                    user_path,
+                    user_result,
+                    reference_path,
+                    reference_result,
+                    max_frames=max_frames,
+                )
+        if render_error:
+            show_error("The analysis succeeded, but the comparison video could not be rendered.", render_error)
+        elif comparison_path is not None and comparison_path.exists():
+            video_bytes = comparison_path.read_bytes()
+            st.markdown("### Slow-motion comparison video")
+            st.video(video_bytes, format="video/mp4")
+            st.download_button(
+                "Download comparison video",
+                data=video_bytes,
+                file_name="shooting_form_comparison.mp4",
+                mime="video/mp4",
+                key="download_comparison_video",
+            )
 
 
 def models_tab(models: Dict[str, Dict], max_frames: int) -> None:
     left, right = st.columns([1.0, 1.0])
     with left:
         st.markdown('<div class="panel"><h3>Build model</h3>', unsafe_allow_html=True)
-        name = st.text_input("Player name", value="Stephen Curry")
-        uploads = st.file_uploader("Model clips", type=VIDEO_TYPES, accept_multiple_files=True)
-        build = st.button("Build model", type="primary")
+        name = st.text_input("Player name", value="Stephen Curry", key="model_player_name")
+        uploads = st.file_uploader("Model clips", type=VIDEO_TYPES, accept_multiple_files=True, key="model_clips")
+        build = st.button("Build model", type="primary", key="build_model_button")
         st.markdown("</div>", unsafe_allow_html=True)
 
     if build:
