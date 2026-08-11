@@ -1,45 +1,49 @@
 # Shooting Form Studio
 
-Pose-based basketball shooting form analysis with:
-- Streamlit web app (`web_app.py`)
-- CLI video processor (`main.py`)
+A Streamlit app and command-line tool for pose-based basketball shooting-form comparison.
 
-The project uses MediaPipe pose landmarks and compares joint angles (elbow, shoulder, hip, knee).
+The project uses MediaPipe pose landmarks to estimate elbow, shoulder, hip, and knee angles from uploaded video. It is an experimental coaching aid, not a biomechanical or medical assessment.
 
-## Features
+## Current Features
 
-- Build real player models from uploaded NBA clips
-- Single-video comparison against:
-  - saved player model, or
-  - custom reference clip
-- Automatic release-sync sub-feature in single-video compare:
-  - aligns user and reference clips at release frame
-  - generates side-by-side slow-motion comparison video
-  - shows angle-difference summary + frame scrubber
-- Bilingual UI toggle (English / Korean)
-- CLI support for:
-  - single-video pose annotation
-  - two-video side-by-side pose comparison
+### Streamlit app (`web_app.py`)
 
-## Project Structure
+- Analyze one uploaded shooting clip.
+- Compare estimated joint angles with:
+  - a saved metric profile, or
+  - an uploaded reference clip.
+- Show the selected release-candidate frame and angle gaps.
+- Generate a slow-motion comparison video without retaining the full video in memory.
+- Build a local metric profile from uploaded reference clips.
 
-- `web_app.py`: Streamlit app
-- `main.py`: CLI processor
-- `models/pose_landmarker_full.task`: MediaPipe Tasks pose model (required for some environments)
-- `models/nba_player_models.json`: saved player model database
-- `outputs/`: output videos
+### Command line (`main.py`)
+
+- Annotate one video with pose landmarks.
+- Compare two videos side by side.
+- Optionally run basketball detection with Ultralytics YOLO.
+
+## Important Limitations
+
+- The current release candidate is the frame where the visible shooting-side wrist reaches its highest image position. It is not verified ball-release detection.
+- Camera angle, framing, occlusion, and clip timing strongly affect the result.
+- A saved metric profile contains angle targets, not an NBA player's source video. In that mode the comparison video repeats the user's motion on both sides and labels the right side as a metric target.
+- The included Stephen Curry profile is a single experimental sample and should not be treated as a professional benchmark.
+- Profiles created in the app are written to `models/nba_player_models.json`. On hosts with ephemeral filesystems, including Render Free, those changes disappear after a restart, redeploy, or idle spin-down.
+- The interface is currently English-only.
 
 ## Requirements
 
-- Python 3.10+
-- `opencv-python`
+- Python 3.12 for the tested deployment
+- `opencv-python-headless`
 - `mediapipe`
 - `numpy`
 - `pandas`
 - `streamlit`
-- Optional: `ultralytics` (only for `main.py --ball`)
+- Optional: `ultralytics` for CLI `--ball` mode
 
-## Installation
+Pinned deployment versions are listed in `requirements.txt`.
+
+## Local Setup
 
 ```bash
 python -m venv .venv
@@ -48,67 +52,63 @@ python -m venv .venv
 # macOS/Linux
 source .venv/bin/activate
 
-pip install --upgrade pip
-pip install opencv-python mediapipe numpy pandas streamlit
-# optional
-pip install ultralytics
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt pytest
 ```
 
-## Run Web App
+Run the web app:
 
 ```bash
 streamlit run web_app.py
 ```
 
-### Web Workflow
+Run the smoke tests:
 
-1. `NBA Model Builder` tab:
-   - upload NBA clips
-   - build/update player model
-2. `Single Video Compare` tab:
-   - upload your video
-   - choose saved model or upload custom reference clip
-   - run comparison
-3. If custom reference clip is provided:
-   - release-sync comparison runs automatically as sub-feature
-   - slow-motion synchronized video is generated
+```bash
+python -m py_compile web_app.py main.py
+python -m pytest -q
+```
 
-## Run CLI
+## Web Workflow
 
-### Single Video Annotation
+1. Open the **Analyze** tab.
+2. Upload your shooting clip.
+3. Choose a saved metric profile or upload a reference clip.
+4. Select whether to render a slow-motion comparison.
+5. Click **Analyze form**.
+
+Use clips with a clear full-body view and a similar camera angle for both videos.
+
+## CLI Examples
+
+Single-video annotation:
 
 ```bash
 python main.py --input path/to/input.mp4 --output outputs/annotated.mp4
 ```
 
-Useful flags:
-- `--show`
-- `--max_frames 300`
-- `--draw_indices`
-
-Optional ball mode (single-video only):
-
-```bash
-python main.py --input input.mp4 --output outputs/annotated.mp4 --ball --ball_model yolov8n.pt
-```
-
-### Two-Video Comparison (CLI)
+Two-video comparison:
 
 ```bash
 python main.py --input path/to/video_a.mp4 --input2 path/to/video_b.mp4 --output outputs/compare.mp4
 ```
 
-## Notes
+Optional ball detection:
 
-- If your MediaPipe build does not expose `mp.solutions.pose`, this project falls back to MediaPipe Tasks API using `models/pose_landmarker_full.task`.
-- Keep camera angle similar between compared videos for better landmark consistency.
+```bash
+python -m pip install ultralytics
+python main.py --input input.mp4 --output outputs/annotated.mp4 --ball --ball_model yolov8n.pt
+```
 
-## Troubleshooting
+## Deployment
 
-- `Failed to import 'mediapipe'`
-  - install/upgrade: `pip install --upgrade mediapipe`
-- No visible comparison video in web
-  - app provides frame scrubber fallback even when codec playback is unavailable
-- Poor comparison quality
-  - use side-view clips with clear full-body visibility
+The repository includes a Render Docker Blueprint:
 
+- `Dockerfile`: installs the Python and Linux runtime dependencies.
+- `render.yaml`: defines the web service, health check, and deploy policy.
+- `/_stcore/health`: Streamlit health endpoint used by Render.
+- `.github/workflows/quality.yml`: Python 3.12 compile, test, and MediaPipe runtime smoke checks.
+
+A `render.yaml` file does not create a service by itself. Connect this repository as a Blueprint in the Render dashboard, wait for the `quality` check to pass, and then use the generated `*.onrender.com` address.
+
+Render Free services sleep after inactivity and can take about a minute to start again.
