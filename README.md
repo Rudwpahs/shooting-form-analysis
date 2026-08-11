@@ -30,6 +30,8 @@ The project uses MediaPipe pose landmarks to estimate elbow, shoulder, hip, and 
 - The included Stephen Curry profile is a single experimental sample and should not be treated as a professional benchmark.
 - Profiles created in the app are written to `models/nba_player_models.json`. On hosts with ephemeral filesystems, including Render Free, those changes disappear after a restart, redeploy, or idle spin-down.
 - The interface is currently English-only.
+- Generated comparison files are deleted after Streamlit reads them, but uploaded source clips currently remain in the instance temporary directory until the process restarts.
+- Comparison video uses the MP4V codec. Browser preview support varies; the download remains available when inline playback fails.
 
 ## Requirements
 
