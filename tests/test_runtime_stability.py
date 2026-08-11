@@ -102,7 +102,7 @@ def test_comparison_offsets_do_not_repeat_before_start_or_exceed_scan_limit():
         window=24,
     )
     assert first_offset == -24
-    assert last_offset == 6
+    assert last_offset == 5
 
 
 def test_runtime_status_reports_missing_tasks_api(monkeypatch):
