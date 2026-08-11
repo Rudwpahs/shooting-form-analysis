@@ -6,7 +6,8 @@ services:
     region: singapore
     dockerfilePath: ./Dockerfile
     dockerContext: .
-    autoDeployTrigger: commit
+    autoDeployTrigger: checksPass
+    healthCheckPath: /_stcore/health
     envVars:
       - key: PYTHONUNBUFFERED
         value: "1"
