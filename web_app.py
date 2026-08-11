@@ -116,7 +116,7 @@ class AnalysisResult:
 
 
 @lru_cache(maxsize=1)
-def runtime_status() -> Tuple[bool, str]:
+def _runtime_status_probe() -> Tuple[bool, str]:
     if MEDIAPIPE_IMPORT_ERROR is not None:
         return False, f"MediaPipe import failed: {MEDIAPIPE_IMPORT_ERROR}"
     if mp is None:
@@ -133,7 +133,6 @@ def runtime_status() -> Tuple[bool, str]:
     if not TASK_MODEL_PATH.is_file():
         return False, f"Missing pose model: {TASK_MODEL_PATH}"
 
-    landmarker = None
     try:
         options = vision.PoseLandmarkerOptions(
             base_options=base_options(model_asset_path=str(TASK_MODEL_PATH)),
@@ -143,11 +142,24 @@ def runtime_status() -> Tuple[bool, str]:
         landmarker = vision.PoseLandmarker.create_from_options(options)
     except Exception as exc:
         return False, f"MediaPipe Tasks startup failed: {type(exc).__name__}: {exc}"
-    finally:
-        if landmarker is not None:
-            landmarker.close()
+
+    try:
+        landmarker.close()
+    except Exception as exc:
+        return False, f"MediaPipe Tasks shutdown check failed: {type(exc).__name__}: {exc}"
 
     return True, "MediaPipe Tasks fallback (model verified)"
+
+
+def runtime_status() -> Tuple[bool, str]:
+    result = _runtime_status_probe()
+    if not result[0]:
+        _runtime_status_probe.cache_clear()
+    return result
+
+
+def clear_runtime_status_cache() -> None:
+    _runtime_status_probe.cache_clear()
 
 def create_pose_detector(fps: float):
     if mp is None:
@@ -296,10 +308,13 @@ def analyze_video(video_path: Path, max_frames: int = 240, render_height: int = 
             if landmarks is not None:
                 height, width = frame.shape[:2]
                 metrics, wrist_y = collect_metrics(landmarks, width, height)
-                if metrics is not None:
-                    candidate = (wrist_y, frames_scanned, metrics, draw_pose(frame.copy(), landmarks))
-                    if best_candidate is None or wrist_y < best_candidate[0]:
-                        best_candidate = candidate
+                if metrics is not None and (best_candidate is None or wrist_y < best_candidate[0]):
+                    best_candidate = (
+                        wrist_y,
+                        frames_scanned,
+                        metrics,
+                        draw_pose(frame.copy(), landmarks),
+                    )
             frames_scanned += 1
 
         if best_candidate is None:
@@ -385,6 +400,7 @@ def make_saved_model_comparison_video(
     writer = None
     out_path: Optional[Path] = None
     frames_written = 0
+    succeeded = False
     try:
         cap = cv2.VideoCapture(str(user_path))
         if not cap.isOpened():
@@ -411,14 +427,13 @@ def make_saved_model_comparison_video(
                     draw_pose(frame, landmarks)
 
                 left = frame.copy()
-                right = frame.copy()
-                cv2.addWeighted(right, 0.25, right, 0.75, 0, right)
+                right = (frame.astype(np.float32) * 0.72).astype(np.uint8)
 
                 if user_metrics is not None:
                     draw_overlay_lines(left, safe_metric_text(user_metrics, "Your shot"), (24, 48))
                 draw_overlay_lines(right, safe_metric_text(reference_metrics, reference_name), (24, 48))
                 cv2.putText(left, "YOUR RELEASE MOTION", (24, left.shape[0] - 28), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (255, 255, 255), 2, cv2.LINE_AA)
-                cv2.putText(right, "SAVED MODEL TARGET", (24, right.shape[0] - 28), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (255, 255, 255), 2, cv2.LINE_AA)
+                cv2.putText(right, "METRIC TARGET - SAME MOTION", (24, right.shape[0] - 28), cv2.FONT_HERSHEY_SIMPLEX, 0.68, (255, 255, 255), 2, cv2.LINE_AA)
                 combined = np.hstack([left, right])
 
                 if writer is None:
@@ -439,16 +454,47 @@ def make_saved_model_comparison_video(
 
         if frames_written == 0:
             return None, "No frames were available for rendering."
+        writer.release()
+        writer = None
+        if out_path is None or not out_path.exists() or out_path.stat().st_size == 0:
+            return None, "The rendered video file is empty."
+        succeeded = True
         return out_path, ""
     except Exception as exc:
         return None, f"{type(exc).__name__}: {exc}"
     finally:
         if writer is not None:
             writer.release()
+        if not succeeded and out_path is not None:
+            out_path.unlink(missing_ok=True)
         if cap is not None:
             cap.release()
         if detector is not None:
             close_detector(detector)
+
+
+def comparison_offset_bounds(
+    user_center_seconds: float,
+    reference_center_seconds: float,
+    user_fps: float,
+    reference_fps: float,
+    sample_fps: float,
+    max_frames: int,
+    window: int,
+) -> Tuple[int, int]:
+    lower = max(
+        -window,
+        math.ceil(-user_center_seconds * sample_fps),
+        math.ceil(-reference_center_seconds * sample_fps),
+    )
+    user_limit = max_frames / max(user_fps, 1e-6)
+    reference_limit = max_frames / max(reference_fps, 1e-6)
+    upper = min(
+        window,
+        math.floor((user_limit - user_center_seconds) * sample_fps),
+        math.floor((reference_limit - reference_center_seconds) * sample_fps),
+    )
+    return int(lower), int(upper)
 
 
 def make_reference_clip_comparison_video(
@@ -468,6 +514,7 @@ def make_reference_clip_comparison_video(
     writer = None
     out_path: Optional[Path] = None
     frames_written = 0
+    succeeded = False
     try:
         user_cap = cv2.VideoCapture(str(user_path))
         reference_cap = cv2.VideoCapture(str(reference_path))
@@ -482,10 +529,19 @@ def make_reference_clip_comparison_video(
 
         user_center_seconds = max(0, user_result.release_frame_index) / user_fps
         reference_center_seconds = max(0, reference_result.release_frame_index) / reference_fps
+        first_offset, last_offset = comparison_offset_bounds(
+            user_center_seconds,
+            reference_center_seconds,
+            user_fps,
+            reference_fps,
+            sample_fps,
+            max_frames,
+            window,
+        )
 
-        for offset in range(-window, window + 1):
-            user_seconds = max(0.0, user_center_seconds + offset / sample_fps)
-            reference_seconds = max(0.0, reference_center_seconds + offset / sample_fps)
+        for offset in range(first_offset, last_offset + 1):
+            user_seconds = user_center_seconds + offset / sample_fps
+            reference_seconds = reference_center_seconds + offset / sample_fps
             user_cap.set(cv2.CAP_PROP_POS_MSEC, user_seconds * 1000.0)
             reference_cap.set(cv2.CAP_PROP_POS_MSEC, reference_seconds * 1000.0)
             user_ok, left = user_cap.read()
@@ -523,12 +579,19 @@ def make_reference_clip_comparison_video(
 
         if frames_written == 0:
             return None, "No frames were available for rendering."
+        writer.release()
+        writer = None
+        if out_path is None or not out_path.exists() or out_path.stat().st_size == 0:
+            return None, "The rendered video file is empty."
+        succeeded = True
         return out_path, ""
     except Exception as exc:
         return None, f"{type(exc).__name__}: {exc}"
     finally:
         if writer is not None:
             writer.release()
+        if not succeeded and out_path is not None:
+            out_path.unlink(missing_ok=True)
         if user_cap is not None:
             user_cap.release()
         if reference_cap is not None:
