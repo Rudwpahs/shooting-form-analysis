@@ -794,8 +794,8 @@ def analyze_tab(models: Dict[str, Dict], max_frames: int) -> None:
         st.markdown("</div>", unsafe_allow_html=True)
 
     st.caption(
-        "Release is estimated from the highest visible shooting-side wrist; "
-        "it is not verified ball-release detection."
+        "Release is estimated from the highest wrist position on the more visible body side; "
+        "it is not verified shooting-hand or ball-release detection."
     )
     render_video = st.checkbox("Create slow-motion comparison video", value=True, key="render_comparison_video")
     if not st.button("Analyze form", type="primary", key="analyze_form_button"):
