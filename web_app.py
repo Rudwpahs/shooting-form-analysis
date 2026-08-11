@@ -3,6 +3,7 @@ import math
 import tempfile
 import traceback
 from dataclasses import dataclass
+from functools import lru_cache
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 
@@ -114,6 +115,7 @@ class AnalysisResult:
         return self.metrics is not None and not self.error
 
 
+@lru_cache(maxsize=1)
 def runtime_status() -> Tuple[bool, str]:
     if MEDIAPIPE_IMPORT_ERROR is not None:
         return False, f"MediaPipe import failed: {MEDIAPIPE_IMPORT_ERROR}"
@@ -121,10 +123,31 @@ def runtime_status() -> Tuple[bool, str]:
         return False, "MediaPipe is unavailable."
     if hasattr(mp, "solutions") and hasattr(mp.solutions, "pose"):
         return True, "MediaPipe solutions.pose"
-    if TASK_MODEL_PATH.exists():
-        return True, "MediaPipe Tasks fallback"
-    return False, f"Missing pose model: {TASK_MODEL_PATH}"
 
+    try:
+        vision = mp.tasks.vision
+        base_options = mp.tasks.BaseOptions
+    except Exception as exc:
+        return False, f"MediaPipe Tasks API is unavailable: {type(exc).__name__}: {exc}"
+
+    if not TASK_MODEL_PATH.is_file():
+        return False, f"Missing pose model: {TASK_MODEL_PATH}"
+
+    landmarker = None
+    try:
+        options = vision.PoseLandmarkerOptions(
+            base_options=base_options(model_asset_path=str(TASK_MODEL_PATH)),
+            running_mode=vision.RunningMode.VIDEO,
+            num_poses=1,
+        )
+        landmarker = vision.PoseLandmarker.create_from_options(options)
+    except Exception as exc:
+        return False, f"MediaPipe Tasks startup failed: {type(exc).__name__}: {exc}"
+    finally:
+        if landmarker is not None:
+            landmarker.close()
+
+    return True, "MediaPipe Tasks fallback (model verified)"
 
 def create_pose_detector(fps: float):
     if mp is None:
@@ -261,7 +284,7 @@ def analyze_video(video_path: Path, max_frames: int = 240, render_height: int = 
 
         fps = float(cap.get(cv2.CAP_PROP_FPS) or 30.0)
         detector = create_pose_detector(fps=fps)
-        candidates: List[Tuple[float, int, ShotMetrics, np.ndarray]] = []
+        best_candidate: Optional[Tuple[float, int, ShotMetrics, np.ndarray]] = None
         frames_scanned = 0
 
         while frames_scanned < max_frames:
@@ -274,13 +297,15 @@ def analyze_video(video_path: Path, max_frames: int = 240, render_height: int = 
                 height, width = frame.shape[:2]
                 metrics, wrist_y = collect_metrics(landmarks, width, height)
                 if metrics is not None:
-                    candidates.append((wrist_y, frames_scanned, metrics, draw_pose(frame.copy(), landmarks)))
+                    candidate = (wrist_y, frames_scanned, metrics, draw_pose(frame.copy(), landmarks))
+                    if best_candidate is None or wrist_y < best_candidate[0]:
+                        best_candidate = candidate
             frames_scanned += 1
 
-        if not candidates:
+        if best_candidate is None:
             return AnalysisResult(error="No reliable pose was detected.", frames_scanned=frames_scanned)
 
-        _, release_frame_index, metrics, release_frame = min(candidates, key=lambda item: item[0])
+        _, release_frame_index, metrics, release_frame = best_candidate
         return AnalysisResult(
             metrics=metrics,
             release_frame=release_frame,
@@ -340,6 +365,11 @@ def draw_overlay_lines(frame: np.ndarray, lines: List[str], origin: Tuple[int, i
         cv2.putText(frame, line, (x, y + i * 26), cv2.FONT_HERSHEY_SIMPLEX, 0.62, color, 2, cv2.LINE_AA)
 
 
+def slow_motion_fps(source_fps: float, slow_factor: int) -> float:
+    """Return a slowed playback rate without also duplicating frames."""
+    return max(1.0, float(source_fps) / max(1, int(slow_factor)))
+
+
 def make_saved_model_comparison_video(
     user_path: Path,
     user_result: AnalysisResult,
@@ -352,6 +382,9 @@ def make_saved_model_comparison_video(
 ) -> Tuple[Optional[Path], str]:
     cap = None
     detector = None
+    writer = None
+    out_path: Optional[Path] = None
+    frames_written = 0
     try:
         cap = cv2.VideoCapture(str(user_path))
         if not cap.isOpened():
@@ -359,7 +392,6 @@ def make_saved_model_comparison_video(
 
         fps = float(cap.get(cv2.CAP_PROP_FPS) or 30.0)
         detector = create_pose_detector(fps=fps)
-        frames: List[np.ndarray] = []
         frame_index = 0
         center = user_result.release_frame_index if user_result.release_frame_index >= 0 else 0
         start = max(0, center - window)
@@ -380,33 +412,39 @@ def make_saved_model_comparison_video(
 
                 left = frame.copy()
                 right = frame.copy()
-                overlay = right.copy()
-                cv2.addWeighted(overlay, 0.25, right, 0.75, 0, right)
+                cv2.addWeighted(right, 0.25, right, 0.75, 0, right)
 
                 if user_metrics is not None:
                     draw_overlay_lines(left, safe_metric_text(user_metrics, "Your shot"), (24, 48))
                 draw_overlay_lines(right, safe_metric_text(reference_metrics, reference_name), (24, 48))
                 cv2.putText(left, "YOUR RELEASE MOTION", (24, left.shape[0] - 28), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (255, 255, 255), 2, cv2.LINE_AA)
                 cv2.putText(right, "SAVED MODEL TARGET", (24, right.shape[0] - 28), cv2.FONT_HERSHEY_SIMPLEX, 0.75, (255, 255, 255), 2, cv2.LINE_AA)
-                frames.append(np.hstack([left, right]))
+                combined = np.hstack([left, right])
+
+                if writer is None:
+                    out_path = Path(tempfile.NamedTemporaryFile(delete=False, suffix=".mp4").name)
+                    height, width = combined.shape[:2]
+                    writer = cv2.VideoWriter(
+                        str(out_path),
+                        cv2.VideoWriter_fourcc(*"mp4v"),
+                        slow_motion_fps(fps, slow_factor),
+                        (width, height),
+                    )
+                    if not writer.isOpened():
+                        return None, "Could not open video writer."
+
+                writer.write(combined)
+                frames_written += 1
             frame_index += 1
 
-        if not frames:
+        if frames_written == 0:
             return None, "No frames were available for rendering."
-
-        out_path = Path(tempfile.NamedTemporaryFile(delete=False, suffix=".mp4").name)
-        height, width = frames[0].shape[:2]
-        writer = cv2.VideoWriter(str(out_path), cv2.VideoWriter_fourcc(*"mp4v"), max(8.0, fps / slow_factor), (width, height))
-        if not writer.isOpened():
-            return None, "Could not open video writer."
-        for frame in frames:
-            for _ in range(slow_factor):
-                writer.write(frame)
-        writer.release()
         return out_path, ""
     except Exception as exc:
         return None, f"{type(exc).__name__}: {exc}"
     finally:
+        if writer is not None:
+            writer.release()
         if cap is not None:
             cap.release()
         if detector is not None:
@@ -423,65 +461,82 @@ def make_reference_clip_comparison_video(
     slow_factor: int = 3,
     render_height: int = 540,
 ) -> Tuple[Optional[Path], str]:
-    def collect_window(path: Path, center: int) -> Tuple[List[np.ndarray], str]:
-        cap = None
-        detector = None
-        frames: List[np.ndarray] = []
-        try:
-            cap = cv2.VideoCapture(str(path))
-            if not cap.isOpened():
-                return [], "Could not open a clip for rendering."
-            fps = float(cap.get(cv2.CAP_PROP_FPS) or 30.0)
-            detector = create_pose_detector(fps=fps)
-            start = max(0, center - window)
-            end = min(max_frames, center + window + 1)
-            idx = 0
-            while idx < end:
-                ok, frame = cap.read()
-                if not ok:
-                    break
-                if idx >= start:
-                    frame = resize_to_height(frame, render_height)
-                    landmarks = detect_primary_pose(frame, detector)
-                    if landmarks is not None:
-                        draw_pose(frame, landmarks)
-                    frames.append(frame)
-                idx += 1
-            return frames, ""
-        except Exception as exc:
-            return [], f"{type(exc).__name__}: {exc}"
-        finally:
-            if cap is not None:
-                cap.release()
-            if detector is not None:
-                close_detector(detector)
+    user_cap = None
+    reference_cap = None
+    user_detector = None
+    reference_detector = None
+    writer = None
+    out_path: Optional[Path] = None
+    frames_written = 0
+    try:
+        user_cap = cv2.VideoCapture(str(user_path))
+        reference_cap = cv2.VideoCapture(str(reference_path))
+        if not user_cap.isOpened() or not reference_cap.isOpened():
+            return None, "Could not open one or both clips for rendering."
 
-    left_frames, left_error = collect_window(user_path, user_result.release_frame_index)
-    right_frames, right_error = collect_window(reference_path, reference_result.release_frame_index)
-    if left_error or right_error:
-        return None, left_error or right_error
-    if not left_frames or not right_frames:
-        return None, "No frames were available for rendering."
+        user_fps = float(user_cap.get(cv2.CAP_PROP_FPS) or 30.0)
+        reference_fps = float(reference_cap.get(cv2.CAP_PROP_FPS) or 30.0)
+        sample_fps = max(1.0, min(user_fps, reference_fps, 30.0))
+        user_detector = create_pose_detector(fps=sample_fps)
+        reference_detector = create_pose_detector(fps=sample_fps)
 
-    count = min(len(left_frames), len(right_frames))
-    frames = []
-    for i in range(count):
-        left = left_frames[i]
-        right = right_frames[i]
-        cv2.putText(left, "YOUR CLIP", (24, 42), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 255), 2, cv2.LINE_AA)
-        cv2.putText(right, "REFERENCE CLIP", (24, 42), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 255), 2, cv2.LINE_AA)
-        frames.append(np.hstack([left, right]))
+        user_center_seconds = max(0, user_result.release_frame_index) / user_fps
+        reference_center_seconds = max(0, reference_result.release_frame_index) / reference_fps
 
-    out_path = Path(tempfile.NamedTemporaryFile(delete=False, suffix=".mp4").name)
-    height, width = frames[0].shape[:2]
-    writer = cv2.VideoWriter(str(out_path), cv2.VideoWriter_fourcc(*"mp4v"), 10.0, (width, height))
-    if not writer.isOpened():
-        return None, "Could not open video writer."
-    for frame in frames:
-        for _ in range(slow_factor):
-            writer.write(frame)
-    writer.release()
-    return out_path, ""
+        for offset in range(-window, window + 1):
+            user_seconds = max(0.0, user_center_seconds + offset / sample_fps)
+            reference_seconds = max(0.0, reference_center_seconds + offset / sample_fps)
+            user_cap.set(cv2.CAP_PROP_POS_MSEC, user_seconds * 1000.0)
+            reference_cap.set(cv2.CAP_PROP_POS_MSEC, reference_seconds * 1000.0)
+            user_ok, left = user_cap.read()
+            reference_ok, right = reference_cap.read()
+            if not user_ok or not reference_ok:
+                continue
+
+            left = resize_to_height(left, render_height)
+            right = resize_to_height(right, render_height)
+            left_landmarks = detect_primary_pose(left, user_detector)
+            right_landmarks = detect_primary_pose(right, reference_detector)
+            if left_landmarks is not None:
+                draw_pose(left, left_landmarks)
+            if right_landmarks is not None:
+                draw_pose(right, right_landmarks)
+
+            cv2.putText(left, "YOUR CLIP", (24, 42), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 255), 2, cv2.LINE_AA)
+            cv2.putText(right, "REFERENCE CLIP", (24, 42), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (255, 255, 255), 2, cv2.LINE_AA)
+            combined = np.hstack([left, right])
+
+            if writer is None:
+                out_path = Path(tempfile.NamedTemporaryFile(delete=False, suffix=".mp4").name)
+                height, width = combined.shape[:2]
+                writer = cv2.VideoWriter(
+                    str(out_path),
+                    cv2.VideoWriter_fourcc(*"mp4v"),
+                    slow_motion_fps(sample_fps, slow_factor),
+                    (width, height),
+                )
+                if not writer.isOpened():
+                    return None, "Could not open video writer."
+
+            writer.write(combined)
+            frames_written += 1
+
+        if frames_written == 0:
+            return None, "No frames were available for rendering."
+        return out_path, ""
+    except Exception as exc:
+        return None, f"{type(exc).__name__}: {exc}"
+    finally:
+        if writer is not None:
+            writer.release()
+        if user_cap is not None:
+            user_cap.release()
+        if reference_cap is not None:
+            reference_cap.release()
+        if user_detector is not None:
+            close_detector(user_detector)
+        if reference_detector is not None:
+            close_detector(reference_detector)
 
 
 def inject_theme() -> None:
