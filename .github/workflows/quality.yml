@@ -29,8 +29,8 @@ jobs:
 
       - name: Install Linux runtime packages
         run: |
-          sudo apt-get update
-          sudo xargs -a packages.txt apt-get install -y --no-install-recommends
+          sudo apt-get update -qq
+          sudo env DEBIAN_FRONTEND=noninteractive xargs -a packages.txt apt-get install -y -qq --no-install-recommends
 
       - name: Install dependencies
         run: |
