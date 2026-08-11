@@ -487,8 +487,9 @@ def comparison_offset_bounds(
         math.ceil(-user_center_seconds * sample_fps),
         math.ceil(-reference_center_seconds * sample_fps),
     )
-    user_limit = max_frames / max(user_fps, 1e-6)
-    reference_limit = max_frames / max(reference_fps, 1e-6)
+    last_frame_index = max(0, max_frames - 1)
+    user_limit = last_frame_index / max(user_fps, 1e-6)
+    reference_limit = last_frame_index / max(reference_fps, 1e-6)
     upper = min(
         window,
         math.floor((user_limit - user_center_seconds) * sample_fps),
@@ -792,6 +793,10 @@ def analyze_tab(models: Dict[str, Dict], max_frames: int) -> None:
             reference_video = st.file_uploader("Reference video", type=VIDEO_TYPES, key="analyze_reference_video")
         st.markdown("</div>", unsafe_allow_html=True)
 
+    st.caption(
+        "Release is estimated from the highest visible shooting-side wrist; "
+        "it is not verified ball-release detection."
+    )
     render_video = st.checkbox("Create slow-motion comparison video", value=True, key="render_comparison_video")
     if not st.button("Analyze form", type="primary", key="analyze_form_button"):
         return
@@ -848,9 +853,13 @@ def analyze_tab(models: Dict[str, Dict], max_frames: int) -> None:
         if render_error:
             show_error("The analysis succeeded, but the comparison video could not be rendered.", render_error)
         elif comparison_path is not None and comparison_path.exists():
-            video_bytes = comparison_path.read_bytes()
+            try:
+                video_bytes = comparison_path.read_bytes()
+            finally:
+                comparison_path.unlink(missing_ok=True)
             st.markdown("### Slow-motion comparison video")
             st.video(video_bytes, format="video/mp4")
+            st.caption("If the MP4V preview is unavailable in your browser, use the download button.")
             st.download_button(
                 "Download comparison video",
                 data=video_bytes,
