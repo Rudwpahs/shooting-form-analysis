@@ -79,14 +79,40 @@ def test_slow_motion_uses_one_timebase_adjustment():
         assert "for _ in range(slow_factor)" not in source
 
 
+def test_comparison_offsets_do_not_repeat_before_start_or_exceed_scan_limit():
+    first_offset, last_offset = web_app.comparison_offset_bounds(
+        user_center_seconds=0.1,
+        reference_center_seconds=0.2,
+        user_fps=30.0,
+        reference_fps=30.0,
+        sample_fps=30.0,
+        max_frames=240,
+        window=24,
+    )
+    assert first_offset == -3
+    assert last_offset == 24
+
+    first_offset, last_offset = web_app.comparison_offset_bounds(
+        user_center_seconds=7.8,
+        reference_center_seconds=7.7,
+        user_fps=30.0,
+        reference_fps=30.0,
+        sample_fps=30.0,
+        max_frames=240,
+        window=24,
+    )
+    assert first_offset == -24
+    assert last_offset == 6
+
+
 def test_runtime_status_reports_missing_tasks_api(monkeypatch):
     monkeypatch.setattr(web_app, "mp", object())
     monkeypatch.setattr(web_app, "MEDIAPIPE_IMPORT_ERROR", None)
-    web_app.runtime_status.cache_clear()
+    web_app.clear_runtime_status_cache()
     try:
         ok, detail = web_app.runtime_status()
     finally:
-        web_app.runtime_status.cache_clear()
+        web_app.clear_runtime_status_cache()
 
     assert not ok
     assert "Tasks API is unavailable" in detail
@@ -119,11 +145,11 @@ def test_runtime_status_surfaces_model_startup_failure(monkeypatch, tmp_path):
     monkeypatch.setattr(web_app, "mp", fake_mp)
     monkeypatch.setattr(web_app, "MEDIAPIPE_IMPORT_ERROR", None)
     monkeypatch.setattr(web_app, "TASK_MODEL_PATH", model_path)
-    web_app.runtime_status.cache_clear()
+    web_app.clear_runtime_status_cache()
     try:
         ok, detail = web_app.runtime_status()
     finally:
-        web_app.runtime_status.cache_clear()
+        web_app.clear_runtime_status_cache()
 
     assert not ok
     assert "Tasks startup failed" in detail
