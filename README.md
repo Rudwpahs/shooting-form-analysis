@@ -24,7 +24,7 @@ The project uses MediaPipe pose landmarks to estimate elbow, shoulder, hip, and 
 
 ## Important Limitations
 
-- The current release candidate is the frame where the visible shooting-side wrist reaches its highest image position. It is not verified ball-release detection.
+- The current release candidate is the frame where the wrist on the more visible body side reaches its highest image position. The code does not verify the shooting hand or ball release.
 - Camera angle, framing, occlusion, and clip timing strongly affect the result.
 - A saved metric profile contains angle targets, not an NBA player's source video. In that mode the comparison video repeats the user's motion on both sides and labels the right side as a metric target.
 - The included Stephen Curry profile is a single experimental sample and should not be treated as a professional benchmark.
