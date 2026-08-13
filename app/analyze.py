@@ -10,9 +10,10 @@ from typing import Dict, List, Optional, Sequence, Tuple
 import cv2
 import numpy as np
 
-from .angles import AngleSnapshot, angles_from_landmarks, median_angles
+from .angles import AngleSnapshot, angles_from_landmarks, angles_plausible, median_angles
+from .multiview3d import merge_multiview_release
 from .pose import PoseCandidate, close_detector, create_pose_detector
-from .shot_span import ShotSpan, detect_shot_span, phase_label
+from .shot_span import ShotSpan, detect_shot_span, phase_label, summarize_phases
 
 
 VIEW_TAGS = ("front", "side", "oblique")
@@ -39,10 +40,23 @@ class ViewAnalysis:
     catch_frame_index: int = -1
     dip_frame_index: int = -1
     followthrough_frame_index: int = -1
+    release_landmarks: List[dict] = field(default_factory=list)
     error: str = ""
 
     def to_dict(self) -> dict:
-        return asdict(self)
+        data = asdict(self)
+        data.pop("sequence_angles", None)
+        # Landmarks are large; keep only a flag in API payloads.
+        lms = data.pop("release_landmarks", None) or []
+        data["has_release_landmarks"] = bool(lms)
+        data["phases"] = {
+            "catch": self.catch_frame_index,
+            "dip": self.dip_frame_index,
+            "release": self.release_frame_index,
+            "follow_through": self.followthrough_frame_index,
+        }
+        data["phase_summary"] = summarize_phases(self.timeline)
+        return data
 
 
 @dataclass
@@ -95,11 +109,42 @@ def _pick_pose(poses: List[PoseCandidate], person_index: int) -> Optional[PoseCa
 
 
 def _angles_for_pose(pose: PoseCandidate, hand: Optional[str]) -> Optional[AngleSnapshot]:
+    """Single-view angles from MediaPipe world landmarks (monocular 3D estimate).
+
+    True multi-view 3D is handled in analyze_session via triangulation when
+    front/side/oblique clips are uploaded together.
+    """
     if pose.world_landmarks:
-        snap = angles_from_landmarks(pose.world_landmarks, hand, space="3d")
-        if snap is not None:
-            return snap
+        world = angles_from_landmarks(pose.world_landmarks, hand, space="3d")
+        if world is not None and angles_plausible(world):
+            return world
+        if world is not None:
+            return world
     return angles_from_landmarks(pose.image_landmarks, hand, space="2d")
+
+
+def _landmarks_payload(landmarks) -> List[dict]:
+    out = []
+    for lm in landmarks or []:
+        if hasattr(lm, "x") and hasattr(lm, "y"):
+            out.append(
+                {
+                    "x": float(lm.x),
+                    "y": float(lm.y),
+                    "z": float(getattr(lm, "z", 0.0)),
+                    "visibility": float(getattr(lm, "visibility", 1.0)),
+                }
+            )
+            continue
+        out.append(
+            {
+                "x": float(lm[0]),
+                "y": float(lm[1]),
+                "z": float(lm[2]) if len(lm) > 2 else 0.0,
+                "visibility": 1.0,
+            }
+        )
+    return out
 
 
 def _wrist_image_y(pose: PoseCandidate, hand: str) -> float:
@@ -175,6 +220,22 @@ def _timeline_from_shot(
     return samples
 
 
+def release_score(angles: dict) -> float:
+    elbow = float(angles.get("elbow", 0) or 0)
+    shoulder = float(angles.get("shoulder", 0) or 0)
+    if elbow < 100 or shoulder < 70:
+        return 0.0
+    base = elbow * 1.2 + shoulder * 0.6
+    knee = float(angles.get("knee", 0) or 0)
+    hip = float(angles.get("hip", 0) or 0)
+    penalty = 0.0
+    if knee < 120 or knee > 175:
+        penalty += 50
+    if hip < 90 or hip > 175:
+        penalty += 50
+    return max(0.0, base - penalty)
+
+
 def analyze_view(
     video_path: Path,
     view: str = "side",
@@ -203,7 +264,7 @@ def analyze_view(
         fps = float(cap.get(cv2.CAP_PROP_FPS) or 30.0)
         detector = create_pose_detector(fps=fps, num_poses=num_poses)
 
-        candidates: List[Tuple[float, int, AngleSnapshot]] = []
+        candidates: List[Tuple[float, int, AngleSnapshot, List[dict]]] = []
         sequence: List[Tuple[int, AngleSnapshot, float]] = []
         frames_scanned = 0
         after_frames = max(1, int(round(max(after_release_sec, 0.6) * fps)))
@@ -221,12 +282,14 @@ def analyze_view(
                 snap = _angles_for_pose(pose, hand)
                 if snap is not None:
                     wrist_y = _wrist_image_y(pose, snap.hand)
-                    candidates.append((wrist_y, frames_scanned, snap))
+                    candidates.append(
+                        (wrist_y, frames_scanned, snap, _landmarks_payload(pose.image_landmarks))
+                    )
                     if keep_sequence:
                         sequence.append((frames_scanned, snap, wrist_y))
             frames_scanned += 1
             if frames_scanned >= max_frames and candidates:
-                _, rel_so_far, _ = min(candidates, key=lambda item: item[0])
+                _, rel_so_far, _, _ = min(candidates, key=lambda item: item[0])
                 if frames_scanned > rel_so_far + after_frames:
                     break
 
@@ -242,7 +305,7 @@ def analyze_view(
                 error="No reliable pose for the selected person.",
             )
 
-        _, release_idx, release_snap = min(candidates, key=lambda item: item[0])
+        _, release_idx, release_snap, release_lms = min(candidates, key=lambda item: item[0])
         seq_dict: Dict[str, List[float]] = {}
         if keep_sequence and sequence:
             for key in ("elbow", "shoulder", "hip", "knee"):
@@ -273,6 +336,7 @@ def analyze_view(
             catch_frame_index=catch_frame,
             dip_frame_index=dip_frame,
             followthrough_frame_index=ft_frame,
+            release_landmarks=release_lms,
         )
     except Exception as exc:
         return ViewAnalysis(
@@ -290,13 +354,51 @@ def analyze_view(
             close_detector(detector)
 
 
+def pick_best_person(
+    video_path: Path,
+    view: str = "side",
+    hand: Optional[str] = None,
+    max_frames: int = 180,
+) -> int:
+    """Choose the detected person whose release pose looks most like a jump shot."""
+    best_i = 0
+    best_s = -1.0
+    for person_index in range(3):
+        result = analyze_view(
+            video_path,
+            view=view,
+            person_index=person_index,
+            hand=hand,
+            max_frames=max_frames,
+            keep_sequence=False,
+            after_release_sec=0.3,
+        )
+        if result.error or not result.release_angles:
+            continue
+        score = release_score(result.release_angles)
+        if score > best_s:
+            best_s = score
+            best_i = person_index
+    return best_i
+
+
 def analyze_session(
     videos: Sequence[Tuple[Path, str]],
-    person_index: int = 0,
+    person_index: Optional[int] = 0,
     hand: Optional[str] = None,
     max_frames: int = 240,
+    auto_person: bool = False,
 ) -> SessionAnalysis:
-    """Analyze 1–3 videos tagged with view names; merge release angles by median."""
+    """Analyze 1–3 videos; merge release with multi-view 3D triangulation when possible."""
+    if auto_person or person_index is None:
+        first_path, first_view = videos[0]
+        tag = first_view if first_view in VIEW_TAGS else "side"
+        person_index = pick_best_person(
+            first_path,
+            view=tag,
+            hand=hand,
+            max_frames=min(max_frames, 200),
+        )
     views: List[ViewAnalysis] = []
     for path, view in videos:
         tag = view if view in VIEW_TAGS else "side"
@@ -307,7 +409,22 @@ def analyze_session(
                 person_index=person_index,
                 hand=hand,
                 max_frames=max_frames,
+                after_release_sec=0.7,
             )
+        )
+
+    # Prefer geometric multi-view 3D when ≥2 tagged cameras have release landmarks.
+    landmark_views = {
+        v.view: v.release_landmarks
+        for v in views
+        if v.release_landmarks and not v.error and v.view in VIEW_TAGS
+    }
+    mv = merge_multiview_release(landmark_views, hand=hand) if len(landmark_views) >= 2 else None
+    if mv is not None:
+        return SessionAnalysis(
+            views=views,
+            person_index=person_index,
+            release_angles_merged=mv.as_dict(),
         )
 
     ok_snaps = [

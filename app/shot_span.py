@@ -92,6 +92,9 @@ def detect_shot_span(
     return ShotSpan(catch_i, dip_i, release_i, ft_i)
 
 
+PHASE_ORDER = ("catch", "dip", "rise", "release", "follow_through")
+
+
 def phase_label(index: int, span: ShotSpan) -> str:
     if index < span.dip_index:
         return "catch"
@@ -102,3 +105,49 @@ def phase_label(index: int, span: ShotSpan) -> str:
     if index == span.release_index:
         return "release"
     return "follow_through"
+
+
+def summarize_phases(samples: List[dict]) -> List[dict]:
+    """One row per phase with representative angles and time span."""
+    buckets = {name: [] for name in PHASE_ORDER}
+    for sample in samples:
+        phase = str(sample.get("phase") or "")
+        if phase in buckets:
+            buckets[phase].append(sample)
+    rows: List[dict] = []
+    for phase in PHASE_ORDER:
+        arr = buckets[phase]
+        if not arr:
+            rows.append(
+                {
+                    "phase": phase,
+                    "count": 0,
+                    "t_start": None,
+                    "t_end": None,
+                    "frame": None,
+                    "angles": None,
+                }
+            )
+            continue
+        if phase == "catch":
+            pick = arr[0]
+        elif phase == "follow_through":
+            pick = arr[-1]
+        else:
+            pick = arr[len(arr) // 2]
+        rows.append(
+            {
+                "phase": phase,
+                "count": len(arr),
+                "t_start": float(arr[0]["t"]),
+                "t_end": float(arr[-1]["t"]),
+                "frame": pick.get("frame"),
+                "angles": {
+                    "elbow": float(pick["elbow"]),
+                    "shoulder": float(pick["shoulder"]),
+                    "hip": float(pick["hip"]),
+                    "knee": float(pick["knee"]),
+                },
+            }
+        )
+    return rows

@@ -408,6 +408,95 @@ select:focus {
   font-family: var(--font-display);
 }
 
+.phase-lead {
+  margin: -0.35rem 0 0.85rem;
+  color: var(--color-muted);
+  font-size: 0.92rem;
+}
+.phase-view { margin-bottom: 1.25rem; }
+.phase-view h4 {
+  margin: 0 0 0.55rem;
+  font-family: var(--font-display);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-size: 1.05rem;
+}
+.phase-bar {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.4rem;
+  margin-bottom: 0.7rem;
+}
+.phase-chip {
+  border: 2px solid var(--color-line);
+  background: #fff;
+  padding: 0.55rem 0.4rem;
+  text-align: left;
+  cursor: pointer;
+  font-family: var(--font-body);
+}
+.phase-chip b {
+  display: block;
+  font-family: var(--font-display);
+  letter-spacing: 0.05em;
+  font-size: 0.95rem;
+}
+.phase-chip span {
+  display: block;
+  color: var(--color-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+.phase-chip.is-on,
+.phase-chip:hover {
+  border-color: var(--color-primary);
+  background: #fff7ed;
+}
+.phase-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  margin-bottom: 0.75rem;
+}
+.phase-table th,
+.phase-table td {
+  border: 1px solid var(--color-line);
+  padding: 0.45rem 0.5rem;
+  text-align: right;
+}
+.phase-table th:first-child,
+.phase-table td:first-child { text-align: left; }
+.phase-table th {
+  background: #f8fafc;
+  font-family: var(--font-display);
+  letter-spacing: 0.04em;
+  font-weight: 600;
+}
+.phase-table tr.is-on td { background: #fff7ed; }
+.phase-chart {
+  width: 100%;
+  height: auto;
+  display: block;
+  background: #fff;
+  border: 2px solid var(--color-line);
+}
+.phase-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin: 0.45rem 0 0;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--color-muted);
+}
+.phase-legend i {
+  display: inline-block;
+  width: 12px;
+  height: 3px;
+  margin-right: 0.3rem;
+  vertical-align: middle;
+}
+
 .feedback {
   margin: 0;
   padding-left: 1.15rem;
@@ -472,6 +561,7 @@ pre {
   .metrics,
   .scoreboard,
   .steps { grid-template-columns: 1fr; }
+  .phase-bar { grid-template-columns: 1fr 1fr; }
   .match { grid-template-columns: 1fr; }
   main { padding-top: 1.5rem; }
 }

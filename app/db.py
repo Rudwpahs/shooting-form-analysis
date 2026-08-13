@@ -172,6 +172,38 @@ def list_player_catalog(conn: sqlite3.Connection, view: str = "merged") -> List[
     return catalog
 
 
+def list_player_angle_rows(conn: sqlite3.Connection) -> List[Dict[str, Any]]:
+    """Every player_key + view angle row for view-aware matching."""
+    rows = conn.execute(
+        """
+        SELECT p.player_key, p.display_name, p.hand, p.source,
+               a.elbow, a.shoulder, a.hip, a.knee, a.space, a.view
+        FROM players p
+        JOIN player_angles a ON a.player_key = p.player_key
+        ORDER BY p.display_name, a.view
+        """
+    ).fetchall()
+    catalog = []
+    for row in rows:
+        catalog.append(
+            {
+                "player_key": row["player_key"],
+                "display_name": row["display_name"],
+                "hand": row["hand"],
+                "source": row["source"],
+                "space": row["space"],
+                "view": row["view"],
+                "angles": {
+                    "elbow": float(row["elbow"]),
+                    "shoulder": float(row["shoulder"]),
+                    "hip": float(row["hip"]),
+                    "knee": float(row["knee"]),
+                },
+            }
+        )
+    return catalog
+
+
 def save_session(
     conn: sqlite3.Connection,
     *,
@@ -264,6 +296,26 @@ def ensure_seeded(db_path: Path = DEFAULT_DB) -> Path:
                             source=str((view_payload or {}).get("source") or source),
                             space=str((view_payload or {}).get("space") or "3d"),
                         )
+                        for clip in (view_payload or {}).get("clips") or []:
+                            clip_ang = (clip or {}).get("angles") or {}
+                            if not all(k in clip_ang for k in ("elbow", "shoulder", "hip", "knee")):
+                                continue
+                            if not all(float(clip_ang[k]) > 0 for k in ("elbow", "shoulder", "hip", "knee")):
+                                continue
+                            url = str((clip or {}).get("youtube_url") or "")
+                            vid = url.split("v=")[-1][:11] if "v=" in url else url.rstrip("/").split("/")[-1][:11]
+                            if len(vid) < 8:
+                                continue
+                            upsert_player(
+                                conn,
+                                player_key=player_key,
+                                display_name=name,
+                                angles={k: float(clip_ang[k]) for k in ("elbow", "shoulder", "hip", "knee")},
+                                view=f"clip:{vid}",
+                                hand=hand,
+                                source=str((clip or {}).get("source") or source),
+                                space=str((clip or {}).get("space") or "3d"),
+                            )
                         timeline = (view_payload or {}).get("timeline") or {}
                         samples = timeline.get("samples") if isinstance(timeline, dict) else None
                         if samples:

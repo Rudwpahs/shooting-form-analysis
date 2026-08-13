@@ -8,9 +8,9 @@ from pathlib import Path
 
 from flask import Flask, jsonify, request, send_from_directory
 
-from .analyze import VIEW_TAGS, analyze_session, list_people_in_video
-from .db import connect, ensure_seeded, list_player_catalog, save_session, upsert_player
-from .similarity import match_angles
+from .analyze import VIEW_TAGS, analyze_session, list_people_in_video, release_score
+from .db import connect, ensure_seeded, list_player_angle_rows, list_player_catalog, save_session, upsert_player
+from .similarity import match_views
 
 ROOT = Path(__file__).resolve().parent.parent
 STATIC = ROOT / "static"
@@ -137,6 +137,7 @@ def analyze():
         return jsonify({"error": "Upload 1–3 videos."}), 400
 
     person_index = int(request.form.get("person_index", 0))
+    auto_person = request.form.get("auto_person", "1") != "0"
     hand = request.form.get("hand") or None
     if hand not in ("left", "right", None):
         hand = None
@@ -144,22 +145,74 @@ def analyze():
     lang = request.form.get("lang") or "ko"
 
     try:
-        session = analyze_session(
-            videos, person_index=person_index, hand=hand, max_frames=max_frames
-        )
-        if session.error and not session.release_angles_merged:
-            return jsonify({"error": session.error, "analysis": session.to_dict()}), 422
-
         conn = connect()
         try:
-            catalog = list_player_catalog(conn)
-            matches = match_angles(session.release_angles_merged, catalog, top_k=5)
+            catalog = list_player_angle_rows(conn)
+
+            def run_one(index: int):
+                sess = analyze_session(
+                    videos,
+                    person_index=index,
+                    hand=hand,
+                    max_frames=max_frames,
+                    auto_person=False,
+                )
+                if sess.error and not sess.release_angles_merged:
+                    return None
+                if release_score(sess.release_angles_merged) <= 0:
+                    return None
+                qv = [
+                    {"view": v.view, "angles": v.release_angles}
+                    for v in sess.views
+                    if v.release_angles and not v.error
+                ]
+                if not qv and sess.release_angles_merged:
+                    qv = [{"view": "merged", "angles": sess.release_angles_merged}]
+                found = match_views(qv, catalog, top_k=5)
+                if not found:
+                    return None
+                return sess, found
+
+            packed = None
+            if auto_person:
+                best_key = None
+                for index in range(3):
+                    result = run_one(index)
+                    if result is None:
+                        continue
+                    sess, found = result
+                    key = (found[0].score, -found[0].distance_deg)
+                    if best_key is None or key > best_key:
+                        best_key = key
+                        packed = result
+            else:
+                packed = run_one(person_index)
+
+            if packed is None:
+                session = analyze_session(
+                    videos,
+                    person_index=person_index,
+                    hand=hand,
+                    max_frames=max_frames,
+                    auto_person=False,
+                )
+                if session.error and not session.release_angles_merged:
+                    return jsonify({"error": session.error, "analysis": session.to_dict()}), 422
+                query_views = [
+                    {"view": v.view, "angles": v.release_angles}
+                    for v in session.views
+                    if v.release_angles and not v.error
+                ]
+                matches = match_views(query_views, catalog, top_k=5)
+            else:
+                session, matches = packed
+
             match_dicts = [m.to_dict() for m in matches]
             top = matches[0] if matches else None
             feedback = _feedback(top.deltas_deg, lang=lang) if top else []
             session_id = save_session(
                 conn,
-                person_index=person_index,
+                person_index=session.person_index,
                 hand=hand or (session.views[0].hand if session.views else None),
                 release_angles=session.release_angles_merged,
                 views=[v.to_dict() for v in session.views],
@@ -173,7 +226,7 @@ def analyze():
                 "analysis": session.to_dict(),
                 "matches": match_dicts,
                 "feedback": feedback,
-                "note": "Similarity uses joint angles (degrees) only — not limb length or height.",
+                "note": "With 2–3 camera views, release angles come from multi-view triangulation (assumed front/side/oblique yaw). Single-view uses MediaPipe world landmarks. Similarity uses degrees only — not limb length or height.",
                 "disclaimer": "Player angle profiles are unofficial self-measured estimates, not affiliated with any league or athlete.",
             }
         )

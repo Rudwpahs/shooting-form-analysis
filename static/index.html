@@ -16,7 +16,7 @@
     <header class="hero">
       <p class="eyebrow">SHOOTING FORM ANALYSIS</p>
       <h1>각도만으로<br />폼을 비교한다.</h1>
-      <p class="sub">1~3시점 영상 → 사람 선택 → 3D 관절각(°) → 선수 프로필 매칭. 키·팔 길이는 쓰지 않습니다.</p>
+      <p class="sub">1~3시점 영상 → 사람 선택 → 멀티뷰 삼각측량 3D 관절각(°) → 선수 프로필 매칭. 키·팔 길이는 쓰지 않습니다.</p>
       <div class="hero-meta">
         <span class="pill" id="health">connecting…</span>
         <span class="pill quiet">ANGLE-ONLY · UNOFFICIAL</span>
@@ -68,7 +68,7 @@
       <p id="status" class="status" role="status"></p>
       <div class="progress" id="progress" hidden>
         <div class="progress-track"><i id="progress_bar"></i></div>
-        <span>Analyzing release frame…</span>
+        <span>Analyzing catch → follow-through…</span>
       </div>
     </section>
 
@@ -103,6 +103,10 @@
 
       <h3>릴리스 각도</h3>
       <div class="metrics" id="metrics"></div>
+
+      <h3>슈팅 구간</h3>
+      <p class="phase-lead">캐치 → 딥 → 라이즈 → 릴리즈 → 팔로우스루. 매 프레임 각도가 들어 있습니다.</p>
+      <div id="phase_views"></div>
 
       <h3>코칭 포인트</h3>
       <ul id="feedback" class="feedback"></ul>

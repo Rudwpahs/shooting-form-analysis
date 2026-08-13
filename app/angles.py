@@ -92,6 +92,24 @@ def choose_hand(landmarks: Sequence, preferred: Optional[str] = None) -> str:
     return "left" if left >= right else "right"
 
 
+def angles_plausible(snap: AngleSnapshot) -> bool:
+    """Reject monocular depth artifacts (common in MediaPipe world landmarks)."""
+    a = snap.as_dict()
+    elbow, shoulder, hip, knee = a["elbow"], a["shoulder"], a["hip"], a["knee"]
+    if not all(np.isfinite(v) for v in (elbow, shoulder, hip, knee)):
+        return False
+    # Side/front jump-shot ranges; world-z noise often collapses shoulder toward 0–30°.
+    if not (85.0 <= elbow <= 179.0):
+        return False
+    if not (55.0 <= shoulder <= 175.0):
+        return False
+    if not (70.0 <= hip <= 179.0):
+        return False
+    if not (70.0 <= knee <= 179.0):
+        return False
+    return True
+
+
 def angles_from_landmarks(
     landmarks: Sequence,
     hand: Optional[str] = None,

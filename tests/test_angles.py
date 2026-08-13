@@ -6,7 +6,14 @@ import unittest
 
 import numpy as np
 
-from app.angles import angle_degrees, angle_distance, normalize_angle_dict, similarity_score
+from app.angles import (
+    AngleSnapshot,
+    angle_degrees,
+    angle_distance,
+    angles_plausible,
+    normalize_angle_dict,
+    similarity_score,
+)
 from app.similarity import match_angles
 
 
@@ -35,10 +42,71 @@ class AngleTests(unittest.TestCase):
         self.assertLess(matches[0].distance_deg, matches[1].distance_deg)
         self.assertGreater(matches[0].score, matches[1].score)
 
+    def test_side_query_uses_side_profile_not_merged(self):
+        query = {"elbow": 159.7, "shoulder": 160.7, "hip": 159.6, "knee": 129.0}
+        catalog = [
+            {
+                "player_key": "stephen_curry",
+                "display_name": "Stephen Curry",
+                "view": "merged",
+                "angles": {"elbow": 161.4, "shoulder": 116.2, "hip": 129.9, "knee": 132.3},
+            },
+            {
+                "player_key": "stephen_curry",
+                "display_name": "Stephen Curry",
+                "view": "side",
+                "angles": {"elbow": 159.7, "shoulder": 160.7, "hip": 159.6, "knee": 129.0},
+            },
+            {
+                "player_key": "jamal_murray",
+                "display_name": "Jamal Murray",
+                "view": "merged",
+                "angles": {"elbow": 147.5, "shoulder": 133.8, "hip": 150.6, "knee": 139.1},
+            },
+        ]
+        matches = match_angles(query, catalog, top_k=2, query_view="side")
+        self.assertEqual(matches[0].player_key, "stephen_curry")
+        self.assertEqual(matches[0].matched_view, "side")
+        self.assertLess(matches[0].distance_deg, 1.0)
+        self.assertEqual(matches[1].player_key, "jamal_murray")
+
+    def test_clip_sample_beats_other_player_median(self):
+        query = {"elbow": 154.3, "shoulder": 148.3, "hip": 150.0, "knee": 160.0}
+        catalog = [
+            {
+                "player_key": "devin_booker",
+                "display_name": "Devin Booker",
+                "view": "merged",
+                "angles": {"elbow": 140.8, "shoulder": 125.5, "hip": 153.5, "knee": 159.6},
+            },
+            {
+                "player_key": "devin_booker",
+                "display_name": "Devin Booker",
+                "view": "clip:9cz8R4x1DHw",
+                "angles": {"elbow": 154.3, "shoulder": 148.3, "hip": 150.0, "knee": 160.0},
+            },
+            {
+                "player_key": "jamal_murray",
+                "display_name": "Jamal Murray",
+                "view": "merged",
+                "angles": {"elbow": 147.5, "shoulder": 133.8, "hip": 150.6, "knee": 139.1},
+            },
+        ]
+        matches = match_angles(query, catalog, top_k=2, query_view="side")
+        self.assertEqual(matches[0].player_key, "devin_booker")
+        self.assertTrue(str(matches[0].matched_view).startswith("clip:"))
+        self.assertLess(matches[0].distance_deg, 1.0)
+
     def test_distance_zero_when_equal(self):
         a = {"elbow": 170, "shoulder": 145, "hip": 168, "knee": 165}
         self.assertEqual(angle_distance(a, a), 0.0)
         self.assertEqual(similarity_score(0.0), 100.0)
+
+    def test_angles_plausible_rejects_collapsed_shoulder(self):
+        bad = AngleSnapshot(elbow=150, shoulder=12, hip=160, knee=150, hand="right", space="3d")
+        good = AngleSnapshot(elbow=150, shoulder=140, hip=160, knee=150, hand="right", space="3d")
+        self.assertFalse(angles_plausible(bad))
+        self.assertTrue(angles_plausible(good))
 
 
 if __name__ == "__main__":
