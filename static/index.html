@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Shooting Form Analysis</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <div class="court-bg" aria-hidden="true"></div>
+
+  <main>
+    <header class="hero">
+      <p class="eyebrow">SHOOTING FORM ANALYSIS</p>
+      <h1>각도만으로<br />폼을 비교한다.</h1>
+      <p class="sub">1~3시점 영상 → 사람 선택 → 3D 관절각(°) → 선수 프로필 매칭. 키·팔 길이는 쓰지 않습니다.</p>
+      <div class="hero-meta">
+        <span class="pill" id="health">connecting…</span>
+        <span class="pill quiet">ANGLE-ONLY · UNOFFICIAL</span>
+      </div>
+    </header>
+
+    <nav class="steps" aria-label="Progress">
+      <div class="step is-active" data-step="1"><b>01</b><span>Upload</span></div>
+      <div class="step" data-step="2"><b>02</b><span>Person</span></div>
+      <div class="step" data-step="3"><b>03</b><span>Match</span></div>
+    </nav>
+
+    <section class="block" id="upload_block">
+      <div class="block-head">
+        <h2>영상 업로드</h2>
+        <p>Side는 필수. Front / Oblique는 정확도를 올립니다.</p>
+      </div>
+      <div class="upload-grid">
+        <label class="drop">
+          <strong>SIDE</strong>
+          <span>전신 측면 · 권장</span>
+          <input type="file" id="video_side" accept="video/*" />
+          <em id="name_side">파일 선택</em>
+        </label>
+        <label class="drop">
+          <strong>FRONT</strong>
+          <span>정면 · 선택</span>
+          <input type="file" id="video_front" accept="video/*" />
+          <em id="name_front">파일 선택</em>
+        </label>
+        <label class="drop">
+          <strong>OBLIQUE</strong>
+          <span>45° · 선택</span>
+          <input type="file" id="video_oblique" accept="video/*" />
+          <em id="name_oblique">파일 선택</em>
+        </label>
+      </div>
+      <div class="toolbar">
+        <label class="field">핸드
+          <select id="hand">
+            <option value="">auto</option>
+            <option value="right">right</option>
+            <option value="left">left</option>
+          </select>
+        </label>
+        <button type="button" class="btn ghost" id="btn_people">사람 찾기</button>
+        <button type="button" class="btn primary" id="btn_analyze" disabled>3D 각도 분석</button>
+      </div>
+      <p id="status" class="status" role="status"></p>
+      <div class="progress" id="progress" hidden>
+        <div class="progress-track"><i id="progress_bar"></i></div>
+        <span>Analyzing release frame…</span>
+      </div>
+    </section>
+
+    <section class="block" id="people_section" hidden>
+      <div class="block-head">
+        <h2>사람 선택</h2>
+        <p>영상에서 감지된 대상 중 분석할 사람을 고르세요.</p>
+      </div>
+      <div id="people_list" class="people"></div>
+    </section>
+
+    <section class="block result" id="result_section" hidden>
+      <div class="block-head">
+        <h2>매칭 결과</h2>
+        <p>관절각(°) RMSE 기반 유사도</p>
+      </div>
+
+      <div class="scoreboard">
+        <div class="score-tile">
+          <span>TOP MATCH</span>
+          <strong id="top_name">—</strong>
+        </div>
+        <div class="score-tile accent">
+          <span>SIMILARITY</span>
+          <strong id="top_score">—</strong>
+        </div>
+        <div class="score-tile">
+          <span>ANGLE RMSE</span>
+          <strong id="top_dist">—</strong>
+        </div>
+      </div>
+
+      <h3>릴리스 각도</h3>
+      <div class="metrics" id="metrics"></div>
+
+      <h3>코칭 포인트</h3>
+      <ul id="feedback" class="feedback"></ul>
+
+      <h3>전체 매칭</h3>
+      <div id="matches" class="match-list"></div>
+
+      <p class="disclaimer" id="disclaimer"></p>
+      <details>
+        <summary>Raw JSON</summary>
+        <pre id="result_json"></pre>
+      </details>
+    </section>
+
+    <section class="block">
+      <div class="block-head">
+        <h2>DB 각도 프로필</h2>
+        <p>비공식 자체 측정 · 리그/선수 비제휴</p>
+      </div>
+      <div id="players" class="match-list"></div>
+    </section>
+  </main>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

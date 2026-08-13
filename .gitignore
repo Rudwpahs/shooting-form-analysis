@@ -1,0 +1,12 @@
+data/
+__pycache__/
+*.pyc
+.venv/
+uploads/
+outputs/
+graphify-out/
+website/node_modules/
+website/.next/
+website/dist/
+.DS_Store
+*.mp4

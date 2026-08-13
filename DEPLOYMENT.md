@@ -1,39 +1,40 @@
-# Deployment
+# Deployment (GitHub → Render)
 
-This project is a Streamlit web app, but it is configured for Render Docker deployment so it does not depend on Streamlit Community Cloud.
+This repo deploys from GitHub using Render Docker.
 
-## Render Deployment
+## Render
 
-1. Open https://dashboard.render.com.
-2. Choose **New** -> **Blueprint**.
-3. Connect `Rudwpahs/shooting-form-analysis`.
-4. Render will detect `render.yaml` and build the app from `Dockerfile`.
-5. After deployment, open the generated `*.onrender.com` URL.
+1. Open https://dashboard.render.com
+2. **New** → **Blueprint** (or Web Service)
+3. Connect `Rudwpahs/shooting-form-analysis`
+4. Render uses `render.yaml` + `Dockerfile`
+5. Auto-deploys on commit to `main`
 
-The Render service runs:
+The container runs:
 
 ```bash
-streamlit run web_app.py --server.address=0.0.0.0 --server.port=$PORT --server.headless=true
+gunicorn -b 0.0.0.0:$PORT -w 1 -t 300 --threads 4 app.server:app
 ```
 
-This matters because Render web services must listen on `0.0.0.0` and use Render's `PORT` environment variable.
+App stack:
+- Python Flask API (`app/`)
+- Static HTML UI (`static/`)
+- SQLite angle DB (`data/`, created at runtime)
+- MediaPipe pose model (`models/pose_landmarker_full.task`)
 
-## Files Used For Deployment
+## Local
 
-- `Dockerfile`: builds a Python 3.12 image and starts the Streamlit app.
-- `render.yaml`: creates a Render Docker web service with auto-deploy on commit.
-- `requirements.txt`: Python dependencies.
-- `packages.txt`: Linux packages needed by OpenCV and MediaPipe.
+```bash
+pip install -r requirements.txt
+python run.py
+# http://127.0.0.1:7860
+```
 
-## Local Docker Test
+## Local Docker
 
 ```bash
 docker build -t shooting-form-analysis .
 docker run --rm -p 10000:10000 -e PORT=10000 shooting-form-analysis
 ```
 
-Then open:
-
-```text
-http://localhost:10000
-```
+Open http://localhost:10000
