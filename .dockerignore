@@ -1,9 +1,16 @@
 .git
 .venv
-__pycache__
+__pycache__/
 *.pyc
 *.pyo
 *.zip
 outputs/
 videos/
+data/
+graphify-out/
+website/
+website/node_modules/
 .streamlit/secrets.toml
+*.md
+!README.md
+!DEPLOYMENT.md

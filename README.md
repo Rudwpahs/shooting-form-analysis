@@ -1,114 +1,38 @@
-# Shooting Form Studio
+# Shooting Form Analysis
 
-Pose-based basketball shooting form analysis with:
-- Streamlit web app (`web_app.py`)
-- CLI video processor (`main.py`)
+GitHub-hosted basketball shooting form analyzer.
 
-The project uses MediaPipe pose landmarks and compares joint angles (elbow, shoulder, hip, knee).
+**Stack:** Python (Flask) + HTML · MediaPipe 3D joint angles (degrees only) · SQLite matching
 
 ## Features
 
-- Build real player models from uploaded NBA clips
-- Single-video comparison against:
-  - saved player model, or
-  - custom reference clip
-- Automatic release-sync sub-feature in single-video compare:
-  - aligns user and reference clips at release frame
-  - generates side-by-side slow-motion comparison video
-  - shows angle-difference summary + frame scrubber
-- Bilingual UI toggle (English / Korean)
-- CLI support for:
-  - single-video pose annotation
-  - two-video side-by-side pose comparison
+1. Upload 1–3 camera views (side / front / oblique)
+2. Select the person in the clip
+3. Lift pose to 3D and store **joint angles only** (no height / limb length)
+4. Match against player angle profiles in DB
 
-## Project Structure
-
-- `web_app.py`: Streamlit app
-- `main.py`: CLI processor
-- `models/pose_landmarker_full.task`: MediaPipe Tasks pose model (required for some environments)
-- `models/nba_player_models.json`: saved player model database
-- `outputs/`: output videos
-
-## Requirements
-
-- Python 3.10+
-- `opencv-python`
-- `mediapipe`
-- `numpy`
-- `pandas`
-- `streamlit`
-- Optional: `ultralytics` (only for `main.py --ball`)
-
-## Installation
+## Run locally
 
 ```bash
-python -m venv .venv
-# Windows
-.venv\Scripts\activate
-# macOS/Linux
-source .venv/bin/activate
-
-pip install --upgrade pip
-pip install opencv-python mediapipe numpy pandas streamlit
-# optional
-pip install ultralytics
+pip install -r requirements.txt
+python run.py
+# http://127.0.0.1:7860
 ```
 
-## Run Web App
+## Deploy (GitHub → Render)
 
-```bash
-streamlit run web_app.py
-```
+Push to `main`. Render Blueprint uses `Dockerfile` + `render.yaml`.
 
-### Web Workflow
+See [DEPLOYMENT.md](DEPLOYMENT.md).
 
-1. `NBA Model Builder` tab:
-   - upload NBA clips
-   - build/update player model
-2. `Single Video Compare` tab:
-   - upload your video
-   - choose saved model or upload custom reference clip
-   - run comparison
-3. If custom reference clip is provided:
-   - release-sync comparison runs automatically as sub-feature
-   - slow-motion synchronized video is generated
+## Project layout
 
-## Run CLI
+| Path | Role |
+|------|------|
+| `app/` | Pose, 3D angles, analyze, similarity, DB, Flask API |
+| `static/` | HTML / CSS / JS UI |
+| `models/` | MediaPipe `.task` + seed JSON |
+| `data/` | SQLite (runtime) |
+| `Dockerfile` | Production image (gunicorn) |
 
-### Single Video Annotation
-
-```bash
-python main.py --input path/to/input.mp4 --output outputs/annotated.mp4
-```
-
-Useful flags:
-- `--show`
-- `--max_frames 300`
-- `--draw_indices`
-
-Optional ball mode (single-video only):
-
-```bash
-python main.py --input input.mp4 --output outputs/annotated.mp4 --ball --ball_model yolov8n.pt
-```
-
-### Two-Video Comparison (CLI)
-
-```bash
-python main.py --input path/to/video_a.mp4 --input2 path/to/video_b.mp4 --output outputs/compare.mp4
-```
-
-## Notes
-
-- If your MediaPipe build does not expose `mp.solutions.pose`, this project falls back to MediaPipe Tasks API using `models/pose_landmarker_full.task`.
-- Keep camera angle similar between compared videos for better landmark consistency.
-
-## Troubleshooting
-
-- `Failed to import 'mediapipe'`
-  - install/upgrade: `pip install --upgrade mediapipe`
-- No visible comparison video in web
-  - app provides frame scrubber fallback even when codec playback is unavailable
-- Poor comparison quality
-  - use side-view clips with clear full-body visibility
-
+Legacy Streamlit (`web_app.py`) / Next site (`website/`) are not used for deploy.

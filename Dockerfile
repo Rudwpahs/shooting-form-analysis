@@ -3,7 +3,7 @@ FROM python:3.12-slim
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 ENV PIP_NO_CACHE_DIR=1
-ENV STREAMLIT_BROWSER_GATHER_USAGE_STATS=false
+ENV HOST=0.0.0.0
 
 WORKDIR /app
 
@@ -15,8 +15,12 @@ RUN apt-get update \
 RUN python -m pip install --upgrade pip \
     && pip install -r requirements.txt
 
-COPY . .
+COPY app ./app
+COPY static ./static
+COPY models ./models
+COPY run.py ./
 
 EXPOSE 10000
 
-CMD ["sh", "-c", "streamlit run web_app.py --server.address=0.0.0.0 --server.port=${PORT:-10000} --server.headless=true --server.enableCORS=false --server.enableXsrfProtection=false --server.enableWebsocketCompression=false --browser.gatherUsageStats=false"]
+# Render injects $PORT. Gunicorn serves the Flask app.
+CMD ["sh", "-c", "gunicorn -b 0.0.0.0:${PORT:-10000} -w 1 -t 300 --threads 4 app.server:app"]
