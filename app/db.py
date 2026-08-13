@@ -202,24 +202,45 @@ def ensure_seeded(db_path: Path = DEFAULT_DB) -> Path:
         if LEGACY_JSON.exists():
             data = json.loads(LEGACY_JSON.read_text(encoding="utf-8"))
             payload = data.get("Stephen Curry") or {}
-            metrics = payload.get("metrics") or {}
-            angles = {
-                "elbow": float(metrics.get("Elbow angle", 0)),
-                "shoulder": float(metrics.get("Shoulder angle", 0)),
-                "hip": float(metrics.get("Hip angle", 0)),
-                "knee": float(metrics.get("Knee angle", 0)),
-            }
             meta = payload.get("meta") or {}
-            if all(angles.values()):
-                upsert_player(
-                    conn,
-                    player_key="stephen_curry",
-                    display_name="Stephen Curry",
-                    angles=angles,
-                    hand=str(meta.get("hand") or "right"),
-                    source=str(meta.get("source") or "legacy_json_self_measured"),
-                    space=str(meta.get("space") or "3d"),
-                )
+            hand = str(meta.get("hand") or "right")
+            source = str(meta.get("source") or "legacy_json_self_measured")
+
+            views_block = payload.get("views") or {}
+            if views_block:
+                for view_name, view_payload in views_block.items():
+                    ang = (view_payload or {}).get("angles") or {}
+                    if not all(k in ang for k in ("elbow", "shoulder", "hip", "knee")):
+                        continue
+                    upsert_player(
+                        conn,
+                        player_key="stephen_curry",
+                        display_name="Stephen Curry",
+                        angles={k: float(ang[k]) for k in ("elbow", "shoulder", "hip", "knee")},
+                        view=str(view_name),
+                        hand=hand,
+                        source=str((view_payload or {}).get("source") or source),
+                        space=str((view_payload or {}).get("space") or "3d"),
+                    )
+            else:
+                metrics = payload.get("metrics") or {}
+                angles = {
+                    "elbow": float(metrics.get("Elbow angle", 0)),
+                    "shoulder": float(metrics.get("Shoulder angle", 0)),
+                    "hip": float(metrics.get("Hip angle", 0)),
+                    "knee": float(metrics.get("Knee angle", 0)),
+                }
+                if all(angles.values()):
+                    upsert_player(
+                        conn,
+                        player_key="stephen_curry",
+                        display_name="Stephen Curry",
+                        angles=angles,
+                        view="merged",
+                        hand=hand,
+                        source=source,
+                        space=str(meta.get("space") or "3d"),
+                    )
     finally:
         conn.close()
     return db_path

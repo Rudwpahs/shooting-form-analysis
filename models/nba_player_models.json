@@ -1,6 +1,6 @@
 {
   "Stephen Curry": {
-    "sample_count": 1,
+    "sample_count": 2,
     "metrics": {
       "Elbow angle": 140.40213760418305,
       "Shoulder angle": 136.13029793488673,
@@ -14,6 +14,38 @@
       "youtube_url": "https://www.youtube.com/watch?v=xIDwiuxU_8A",
       "person_index": 0,
       "release_frame_index": 6
+    },
+    "views": {
+      "front": {
+        "angles": {
+          "elbow": 132.394072174248,
+          "shoulder": 140.0281788742965,
+          "hip": 170.78884548859855,
+          "knee": 167.1386531625002
+        },
+        "space": "3d",
+        "source": "youtube_self_measured",
+        "clips": [
+          {
+            "youtube_url": "https://youtube.com/shorts/VN1J6EgUQvg",
+            "score": 0.0,
+            "person_index": 0,
+            "release_frame_index": 260,
+            "space": "3d",
+            "hand": "right",
+            "view": "front"
+          },
+          {
+            "youtube_url": "https://youtube.com/shorts/x1kPe03mVpg",
+            "score": 242.8897939336755,
+            "person_index": 0,
+            "release_frame_index": 173,
+            "space": "3d",
+            "hand": "right",
+            "view": "front"
+          }
+        ]
+      }
     }
   }
 }
