@@ -62,10 +62,17 @@ def _as_xyz(point) -> np.ndarray:
         if arr.size == 2:
             return np.array([arr[0], arr[1], 0.0], dtype=np.float64)
         raise ValueError("point must have 2 or 3 components")
-    x = float(getattr(point, "x", point[0]))
-    y = float(getattr(point, "y", point[1]))
-    z = float(getattr(point, "z", 0.0))
-    return np.array([x, y, z], dtype=np.float64)
+    if hasattr(point, "x") and hasattr(point, "y"):
+        return np.array(
+            [float(point.x), float(point.y), float(getattr(point, "z", 0.0))],
+            dtype=np.float64,
+        )
+    if isinstance(point, (list, tuple)) and len(point) >= 2:
+        return np.array(
+            [float(point[0]), float(point[1]), float(point[2]) if len(point) > 2 else 0.0],
+            dtype=np.float64,
+        )
+    raise TypeError(f"Unsupported landmark type: {type(point)!r}")
 
 
 def visibility_mean(landmarks: Sequence, indices: Iterable[int]) -> float:

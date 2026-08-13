@@ -190,7 +190,6 @@ def ensure_seeded(db_path: Path = DEFAULT_DB) -> Path:
         n = conn.execute("SELECT COUNT(*) AS c FROM player_angles").fetchone()["c"]
         if n == 0:
             seed_from_legacy_json(conn)
-            # Neutral pro-baseline archetype (angle-only, no identity claim)
             upsert_player(
                 conn,
                 player_key="pro_baseline",
@@ -199,6 +198,28 @@ def ensure_seeded(db_path: Path = DEFAULT_DB) -> Path:
                 source="archetype",
                 space="3d",
             )
+        # Always keep Stephen Curry in sync with models/nba_player_models.json
+        if LEGACY_JSON.exists():
+            data = json.loads(LEGACY_JSON.read_text(encoding="utf-8"))
+            payload = data.get("Stephen Curry") or {}
+            metrics = payload.get("metrics") or {}
+            angles = {
+                "elbow": float(metrics.get("Elbow angle", 0)),
+                "shoulder": float(metrics.get("Shoulder angle", 0)),
+                "hip": float(metrics.get("Hip angle", 0)),
+                "knee": float(metrics.get("Knee angle", 0)),
+            }
+            meta = payload.get("meta") or {}
+            if all(angles.values()):
+                upsert_player(
+                    conn,
+                    player_key="stephen_curry",
+                    display_name="Stephen Curry",
+                    angles=angles,
+                    hand=str(meta.get("hand") or "right"),
+                    source=str(meta.get("source") or "legacy_json_self_measured"),
+                    space=str(meta.get("space") or "3d"),
+                )
     finally:
         conn.close()
     return db_path
