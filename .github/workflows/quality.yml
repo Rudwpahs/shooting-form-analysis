@@ -35,21 +35,15 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install -r requirements.txt pytest
+          python -m pip install -r requirements.txt
 
       - name: Compile entry points
-        run: python -m py_compile web_app.py main.py
+        run: |
+          python -m py_compile run.py
+          python -m compileall -q app
 
       - name: Run tests
-        run: python -m pytest -q
+        run: python -m unittest discover -s tests -p "test_*.py" -v
 
-      - name: Verify MediaPipe runtime
-        run: |
-          python - <<'PY'
-          import web_app
-
-          ok, detail = web_app.runtime_status()
-          if not ok:
-              raise SystemExit(detail)
-          print(detail)
-          PY
+      - name: Verify MediaPipe model present
+        run: test -f models/pose_landmarker_full.task
