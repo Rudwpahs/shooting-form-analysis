@@ -1,4 +1,4 @@
-"""Store Curry joint angles over time, starting at the detected release frame."""
+"""Store Curry joint angles from catch through follow-through."""
 
 from __future__ import annotations
 
@@ -16,7 +16,6 @@ from app.db import connect, ensure_seeded, upsert_timeline  # noqa: E402
 from scripts.youtube_profile import MODELS_JSON, download_clip, load_json  # noqa: E402
 
 CURRY_NAME = "Stephen Curry"
-AFTER_SEC = 1.0
 
 
 def curry_clip_jobs(data: dict) -> list[dict]:
@@ -62,18 +61,24 @@ def main() -> None:
                 view=view_name,
                 person_index=job["person_index"],
                 hand="right",
-                max_frames=320,
-                after_release_sec=AFTER_SEC,
+                max_frames=400,
+                after_release_sec=0.7,
             )
             if result.error or not result.timeline:
                 print(f"  skip: {result.error or 'empty timeline'}")
                 continue
 
+            phases = {
+                "catch": result.catch_frame_index,
+                "dip": result.dip_frame_index,
+                "release": result.release_frame_index,
+                "follow_through": result.followthrough_frame_index,
+            }
+            duration = float(result.timeline[-1]["t"]) if result.timeline else 0.0
             timeline = {
-                "t0": "release",
-                "after_sec": AFTER_SEC,
+                "t0": "catch",
                 "fps": round(float(result.fps), 3),
-                "release_frame_index": result.release_frame_index,
+                "phases": phases,
                 "youtube_url": url,
                 "person_index": job["person_index"],
                 "samples": result.timeline,
@@ -81,8 +86,9 @@ def main() -> None:
             block = views.setdefault(view_name, {})
             block["timeline"] = timeline
             print(
-                f"  fps={result.fps:.2f} release_frame={result.release_frame_index} "
-                f"samples={len(result.timeline)} t={result.timeline[0]['t']:.3f}..{result.timeline[-1]['t']:.3f}"
+                f"  fps={result.fps:.2f} catch={phases['catch']} dip={phases['dip']} "
+                f"release={phases['release']} follow_through={phases['follow_through']} "
+                f"samples={len(result.timeline)} t=0..{duration:.3f}s"
             )
 
     MODELS_JSON.write_text(json.dumps(data, indent=2), encoding="utf-8")
@@ -101,8 +107,8 @@ def main() -> None:
                 view_name,
                 float(timeline.get("fps") or 30),
                 samples,
-                t0="release",
-                after_sec=AFTER_SEC,
+                t0="catch",
+                after_sec=float((samples[-1] or {}).get("t") or 0),
                 youtube_url=str(timeline.get("youtube_url") or ""),
             )
     finally:

@@ -12,6 +12,7 @@ import numpy as np
 
 from .angles import AngleSnapshot, angles_from_landmarks, median_angles
 from .pose import PoseCandidate, close_detector, create_pose_detector
+from .shot_span import ShotSpan, detect_shot_span, phase_label
 
 
 VIEW_TAGS = ("front", "side", "oblique")
@@ -34,7 +35,10 @@ class ViewAnalysis:
     release_angles: Dict[str, float]
     sequence_angles: Dict[str, List[float]] = field(default_factory=dict)
     fps: float = 0.0
-    timeline: List[Dict[str, float]] = field(default_factory=list)
+    timeline: List[dict] = field(default_factory=list)
+    catch_frame_index: int = -1
+    dip_frame_index: int = -1
+    followthrough_frame_index: int = -1
     error: str = ""
 
     def to_dict(self) -> dict:
@@ -142,25 +146,26 @@ def list_people_in_video(
             close_detector(detector)
 
 
-def _timeline_from_release(
-    sequence: List[Tuple[int, AngleSnapshot]],
-    release_idx: int,
+def _timeline_from_shot(
+    sequence: List[Tuple[int, AngleSnapshot, float]],
+    span: ShotSpan,
     fps: float,
-    after_sec: float = 1.0,
-) -> List[Dict[str, float]]:
-    """Angle samples from the release frame onward (t=0 at release)."""
+) -> List[dict]:
+    """Angle samples from catch through follow-through. t=0 at catch."""
     if fps <= 0:
         fps = 30.0
-    last_frame = release_idx + max(1, int(round(after_sec * fps)))
-    samples: List[Dict[str, float]] = []
-    for frame_idx, snap in sequence:
-        if frame_idx < release_idx or frame_idx > last_frame:
+    catch_frame = sequence[span.catch_index][0]
+    ft_frame = sequence[span.followthrough_index][0]
+    samples: List[dict] = []
+    for seq_i, (frame_idx, snap, _wrist_y) in enumerate(sequence):
+        if frame_idx < catch_frame or frame_idx > ft_frame:
             continue
         angles = snap.as_dict()
         samples.append(
             {
-                "t": round((frame_idx - release_idx) / fps, 4),
-                "frame": float(frame_idx),
+                "t": round((frame_idx - catch_frame) / fps, 4),
+                "frame": int(frame_idx),
+                "phase": phase_label(seq_i, span),
                 "elbow": round(float(angles["elbow"]), 2),
                 "shoulder": round(float(angles["shoulder"]), 2),
                 "hip": round(float(angles["hip"]), 2),
@@ -199,9 +204,9 @@ def analyze_view(
         detector = create_pose_detector(fps=fps, num_poses=num_poses)
 
         candidates: List[Tuple[float, int, AngleSnapshot]] = []
-        sequence: List[Tuple[int, AngleSnapshot]] = []
+        sequence: List[Tuple[int, AngleSnapshot, float]] = []
         frames_scanned = 0
-        after_frames = max(1, int(round(after_release_sec * fps)))
+        after_frames = max(1, int(round(max(after_release_sec, 0.6) * fps)))
         hard_cap = max_frames + after_frames
 
         while frames_scanned < hard_cap:
@@ -218,7 +223,7 @@ def analyze_view(
                     wrist_y = _wrist_image_y(pose, snap.hand)
                     candidates.append((wrist_y, frames_scanned, snap))
                     if keep_sequence:
-                        sequence.append((frames_scanned, snap))
+                        sequence.append((frames_scanned, snap, wrist_y))
             frames_scanned += 1
             if frames_scanned >= max_frames and candidates:
                 _, rel_so_far, _ = min(candidates, key=lambda item: item[0])
@@ -241,9 +246,19 @@ def analyze_view(
         seq_dict: Dict[str, List[float]] = {}
         if keep_sequence and sequence:
             for key in ("elbow", "shoulder", "hip", "knee"):
-                seq_dict[key] = [float(s.as_dict()[key]) for _, s in sequence]
+                seq_dict[key] = [float(s.as_dict()[key]) for _, s, _ in sequence]
 
-        timeline = _timeline_from_release(sequence, release_idx, fps, after_release_sec)
+        wrist_series = [w for _, _, w in sequence]
+        seq_frames = [f for f, _, _ in sequence]
+        try:
+            release_seq_i = seq_frames.index(release_idx)
+        except ValueError:
+            release_seq_i = min(range(len(seq_frames)), key=lambda i: abs(seq_frames[i] - release_idx)) if seq_frames else 0
+        span = detect_shot_span(wrist_series, fps, release_index=release_seq_i) if wrist_series else ShotSpan(0, 0, 0, 0)
+        timeline = _timeline_from_shot(sequence, span, fps) if sequence else []
+        catch_frame = seq_frames[span.catch_index] if seq_frames else -1
+        dip_frame = seq_frames[span.dip_index] if seq_frames else -1
+        ft_frame = seq_frames[span.followthrough_index] if seq_frames else -1
 
         return ViewAnalysis(
             view=view,
@@ -255,6 +270,9 @@ def analyze_view(
             sequence_angles=seq_dict,
             fps=fps,
             timeline=timeline,
+            catch_frame_index=catch_frame,
+            dip_frame_index=dip_frame,
+            followthrough_frame_index=ft_frame,
         )
     except Exception as exc:
         return ViewAnalysis(
