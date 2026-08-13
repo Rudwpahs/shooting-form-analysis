@@ -2,26 +2,24 @@
   "Stephen Curry": {
     "sample_count": 2,
     "metrics": {
-      "Elbow angle": 140.40213760418305,
-      "Shoulder angle": 136.13029793488673,
-      "Hip angle": 158.6868943262706,
-      "Knee angle": 152.5565748961454
+      "Elbow angle": 102.0858892936694,
+      "Shoulder angle": 137.946625769547,
+      "Hip angle": 145.37290541604517,
+      "Knee angle": 163.894707559923
     },
     "meta": {
       "space": "3d",
       "hand": "right",
       "source": "youtube_self_measured",
-      "youtube_url": "https://www.youtube.com/watch?v=xIDwiuxU_8A",
-      "person_index": 0,
-      "release_frame_index": 6
+      "primary_view": "merged"
     },
     "views": {
       "front": {
         "angles": {
-          "elbow": 132.394072174248,
-          "shoulder": 140.0281788742965,
-          "hip": 170.78884548859855,
-          "knee": 167.1386531625002
+          "elbow": 71.77770641309077,
+          "shoulder": 135.8650726647976,
+          "hip": 119.95696534349182,
+          "knee": 160.16276195834527
         },
         "space": "3d",
         "source": "youtube_self_measured",
@@ -33,8 +31,21 @@
             "release_frame_index": 260,
             "space": "3d",
             "hand": "right",
-            "view": "front"
-          },
+            "view": "front",
+            "note": "front view clip; release frame may be off"
+          }
+        ]
+      },
+      "side": {
+        "angles": {
+          "elbow": 132.394072174248,
+          "shoulder": 140.0281788742965,
+          "hip": 170.78884548859855,
+          "knee": 167.1386531625002
+        },
+        "space": "3d",
+        "source": "youtube_self_measured",
+        "clips": [
           {
             "youtube_url": "https://youtube.com/shorts/x1kPe03mVpg",
             "score": 242.8897939336755,
@@ -42,9 +53,21 @@
             "release_frame_index": 173,
             "space": "3d",
             "hand": "right",
-            "view": "front"
+            "view": "side",
+            "note": "second shooting in clip — side view"
           }
         ]
+      },
+      "merged": {
+        "angles": {
+          "elbow": 102.0858892936694,
+          "shoulder": 137.946625769547,
+          "hip": 145.37290541604517,
+          "knee": 163.65070756042275
+        },
+        "space": "3d",
+        "source": "youtube_self_measured",
+        "method": "median of front + side release angles"
       }
     }
   }
