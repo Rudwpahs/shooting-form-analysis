@@ -33,6 +33,8 @@ class ViewAnalysis:
     hand: str
     release_angles: Dict[str, float]
     sequence_angles: Dict[str, List[float]] = field(default_factory=dict)
+    fps: float = 0.0
+    timeline: List[Dict[str, float]] = field(default_factory=list)
     error: str = ""
 
     def to_dict(self) -> dict:
@@ -140,6 +142,34 @@ def list_people_in_video(
             close_detector(detector)
 
 
+def _timeline_from_release(
+    sequence: List[Tuple[int, AngleSnapshot]],
+    release_idx: int,
+    fps: float,
+    after_sec: float = 1.0,
+) -> List[Dict[str, float]]:
+    """Angle samples from the release frame onward (t=0 at release)."""
+    if fps <= 0:
+        fps = 30.0
+    last_frame = release_idx + max(1, int(round(after_sec * fps)))
+    samples: List[Dict[str, float]] = []
+    for frame_idx, snap in sequence:
+        if frame_idx < release_idx or frame_idx > last_frame:
+            continue
+        angles = snap.as_dict()
+        samples.append(
+            {
+                "t": round((frame_idx - release_idx) / fps, 4),
+                "frame": float(frame_idx),
+                "elbow": round(float(angles["elbow"]), 2),
+                "shoulder": round(float(angles["shoulder"]), 2),
+                "hip": round(float(angles["hip"]), 2),
+                "knee": round(float(angles["knee"]), 2),
+            }
+        )
+    return samples
+
+
 def analyze_view(
     video_path: Path,
     view: str = "side",
@@ -149,6 +179,7 @@ def analyze_view(
     num_poses: int = 3,
     render_height: int = 720,
     keep_sequence: bool = True,
+    after_release_sec: float = 1.0,
 ) -> ViewAnalysis:
     cap = cv2.VideoCapture(str(video_path))
     detector = None
@@ -168,10 +199,12 @@ def analyze_view(
         detector = create_pose_detector(fps=fps, num_poses=num_poses)
 
         candidates: List[Tuple[float, int, AngleSnapshot]] = []
-        sequence: List[AngleSnapshot] = []
+        sequence: List[Tuple[int, AngleSnapshot]] = []
         frames_scanned = 0
+        after_frames = max(1, int(round(after_release_sec * fps)))
+        hard_cap = max_frames + after_frames
 
-        while frames_scanned < max_frames:
+        while frames_scanned < hard_cap:
             ok, frame = cap.read()
             if not ok:
                 break
@@ -185,8 +218,12 @@ def analyze_view(
                     wrist_y = _wrist_image_y(pose, snap.hand)
                     candidates.append((wrist_y, frames_scanned, snap))
                     if keep_sequence:
-                        sequence.append(snap)
+                        sequence.append((frames_scanned, snap))
             frames_scanned += 1
+            if frames_scanned >= max_frames and candidates:
+                _, rel_so_far, _ = min(candidates, key=lambda item: item[0])
+                if frames_scanned > rel_so_far + after_frames:
+                    break
 
         if not candidates:
             return ViewAnalysis(
@@ -196,6 +233,7 @@ def analyze_view(
                 space="",
                 hand="",
                 release_angles={},
+                fps=fps,
                 error="No reliable pose for the selected person.",
             )
 
@@ -203,7 +241,9 @@ def analyze_view(
         seq_dict: Dict[str, List[float]] = {}
         if keep_sequence and sequence:
             for key in ("elbow", "shoulder", "hip", "knee"):
-                seq_dict[key] = [float(s.as_dict()[key]) for s in sequence]
+                seq_dict[key] = [float(s.as_dict()[key]) for _, s in sequence]
+
+        timeline = _timeline_from_release(sequence, release_idx, fps, after_release_sec)
 
         return ViewAnalysis(
             view=view,
@@ -213,6 +253,8 @@ def analyze_view(
             hand=release_snap.hand,
             release_angles=release_snap.as_dict(),
             sequence_angles=seq_dict,
+            fps=fps,
+            timeline=timeline,
         )
     except Exception as exc:
         return ViewAnalysis(

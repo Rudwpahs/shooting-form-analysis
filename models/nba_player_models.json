@@ -1,11 +1,11 @@
 {
   "Stephen Curry": {
-    "sample_count": 2,
+    "sample_count": 3,
     "metrics": {
-      "Elbow angle": 102.0858892936694,
-      "Shoulder angle": 137.946625769547,
-      "Hip angle": 145.37290541604517,
-      "Knee angle": 163.894707559923
+      "Elbow angle": 161.44741144977326,
+      "Shoulder angle": 116.2388179730213,
+      "Hip angle": 129.9339025323008,
+      "Knee angle": 132.34164144865875
     },
     "meta": {
       "space": "3d",
@@ -16,58 +16,1907 @@
     "views": {
       "front": {
         "angles": {
-          "elbow": 71.77770641309077,
-          "shoulder": 135.8650726647976,
-          "hip": 119.95696534349182,
-          "knee": 160.16276195834527
+          "elbow": 163.17395545276003,
+          "shoulder": 71.74817714801188,
+          "hip": 100.27960523816608,
+          "knee": 135.704183639346
         },
         "space": "3d",
         "source": "youtube_self_measured",
         "clips": [
           {
-            "youtube_url": "https://youtube.com/shorts/VN1J6EgUQvg",
-            "score": 0.0,
-            "person_index": 0,
-            "release_frame_index": 260,
+            "youtube_url": "https://www.youtube.com/watch?v=eETSPnYf85E",
+            "score": 238.85765283211916,
+            "person_index": 1,
+            "release_frame_index": 236,
             "space": "3d",
             "hand": "right",
-            "view": "front",
-            "note": "front view clip; release frame may be off"
+            "view": "front"
           }
-        ]
+        ],
+        "timeline": {
+          "t0": "release",
+          "after_sec": 1.0,
+          "fps": 29.97,
+          "release_frame_index": 287,
+          "youtube_url": "https://www.youtube.com/watch?v=eETSPnYf85E",
+          "person_index": 1,
+          "samples": [
+            {
+              "t": 0.0,
+              "frame": 287.0,
+              "elbow": 148.98,
+              "shoulder": 9.92,
+              "hip": 84.01,
+              "knee": 146.58
+            }
+          ]
+        }
       },
       "side": {
         "angles": {
-          "elbow": 132.394072174248,
-          "shoulder": 140.0281788742965,
-          "hip": 170.78884548859855,
-          "knee": 167.1386531625002
+          "elbow": 159.72086744678649,
+          "shoulder": 160.72945879803072,
+          "hip": 159.58819982643553,
+          "knee": 128.97909925797148
         },
         "space": "3d",
         "source": "youtube_self_measured",
         "clips": [
           {
-            "youtube_url": "https://youtube.com/shorts/x1kPe03mVpg",
-            "score": 242.8897939336755,
+            "youtube_url": "https://www.youtube.com/watch?v=LqGAODTCaw4",
+            "score": 288.10271621496224,
             "person_index": 0,
-            "release_frame_index": 173,
+            "release_frame_index": 186,
             "space": "3d",
             "hand": "right",
-            "view": "side",
-            "note": "second shooting in clip — side view"
+            "view": "side"
           }
-        ]
+        ],
+        "timeline": {
+          "t0": "release",
+          "after_sec": 1.0,
+          "fps": 29.97,
+          "release_frame_index": 186,
+          "youtube_url": "https://www.youtube.com/watch?v=LqGAODTCaw4",
+          "person_index": 0,
+          "samples": [
+            {
+              "t": 0.0,
+              "frame": 186.0,
+              "elbow": 159.72,
+              "shoulder": 160.73,
+              "hip": 159.59,
+              "knee": 128.98
+            },
+            {
+              "t": 0.0334,
+              "frame": 187.0,
+              "elbow": 160.03,
+              "shoulder": 160.41,
+              "hip": 163.11,
+              "knee": 130.25
+            },
+            {
+              "t": 0.0667,
+              "frame": 188.0,
+              "elbow": 160.57,
+              "shoulder": 160.44,
+              "hip": 169.66,
+              "knee": 139.33
+            },
+            {
+              "t": 0.1001,
+              "frame": 189.0,
+              "elbow": 159.77,
+              "shoulder": 159.71,
+              "hip": 170.71,
+              "knee": 140.75
+            },
+            {
+              "t": 0.1335,
+              "frame": 190.0,
+              "elbow": 159.77,
+              "shoulder": 159.69,
+              "hip": 171.31,
+              "knee": 141.58
+            },
+            {
+              "t": 0.1668,
+              "frame": 191.0,
+              "elbow": 160.99,
+              "shoulder": 160.21,
+              "hip": 174.45,
+              "knee": 115.71
+            },
+            {
+              "t": 0.2002,
+              "frame": 192.0,
+              "elbow": 161.06,
+              "shoulder": 160.41,
+              "hip": 174.04,
+              "knee": 119.1
+            },
+            {
+              "t": 0.2336,
+              "frame": 193.0,
+              "elbow": 159.43,
+              "shoulder": 159.58,
+              "hip": 174.81,
+              "knee": 107.96
+            },
+            {
+              "t": 0.2669,
+              "frame": 194.0,
+              "elbow": 159.74,
+              "shoulder": 159.59,
+              "hip": 175.0,
+              "knee": 106.9
+            },
+            {
+              "t": 0.3003,
+              "frame": 195.0,
+              "elbow": 159.67,
+              "shoulder": 159.63,
+              "hip": 174.82,
+              "knee": 107.11
+            },
+            {
+              "t": 0.3337,
+              "frame": 196.0,
+              "elbow": 165.79,
+              "shoulder": 156.12,
+              "hip": 176.07,
+              "knee": 108.1
+            },
+            {
+              "t": 0.367,
+              "frame": 197.0,
+              "elbow": 164.44,
+              "shoulder": 156.7,
+              "hip": 177.13,
+              "knee": 98.8
+            },
+            {
+              "t": 0.4004,
+              "frame": 198.0,
+              "elbow": 125.34,
+              "shoulder": 25.7,
+              "hip": 135.7,
+              "knee": 108.13
+            },
+            {
+              "t": 0.4338,
+              "frame": 199.0,
+              "elbow": 127.59,
+              "shoulder": 25.98,
+              "hip": 134.58,
+              "knee": 107.99
+            },
+            {
+              "t": 0.4671,
+              "frame": 200.0,
+              "elbow": 126.55,
+              "shoulder": 24.38,
+              "hip": 134.48,
+              "knee": 107.54
+            },
+            {
+              "t": 0.5005,
+              "frame": 201.0,
+              "elbow": 169.24,
+              "shoulder": 161.82,
+              "hip": 174.88,
+              "knee": 126.44
+            },
+            {
+              "t": 0.5339,
+              "frame": 202.0,
+              "elbow": 169.41,
+              "shoulder": 161.73,
+              "hip": 174.98,
+              "knee": 126.52
+            },
+            {
+              "t": 0.5672,
+              "frame": 203.0,
+              "elbow": 169.56,
+              "shoulder": 161.79,
+              "hip": 174.95,
+              "knee": 126.28
+            },
+            {
+              "t": 0.6006,
+              "frame": 204.0,
+              "elbow": 169.84,
+              "shoulder": 161.76,
+              "hip": 173.63,
+              "knee": 136.8
+            },
+            {
+              "t": 0.634,
+              "frame": 205.0,
+              "elbow": 169.31,
+              "shoulder": 162.1,
+              "hip": 174.37,
+              "knee": 131.3
+            },
+            {
+              "t": 0.6673,
+              "frame": 206.0,
+              "elbow": 172.94,
+              "shoulder": 157.22,
+              "hip": 179.39,
+              "knee": 84.55
+            },
+            {
+              "t": 0.7007,
+              "frame": 207.0,
+              "elbow": 173.12,
+              "shoulder": 159.32,
+              "hip": 178.35,
+              "knee": 83.78
+            },
+            {
+              "t": 0.7341,
+              "frame": 208.0,
+              "elbow": 173.1,
+              "shoulder": 158.77,
+              "hip": 178.64,
+              "knee": 83.72
+            },
+            {
+              "t": 0.7674,
+              "frame": 209.0,
+              "elbow": 175.76,
+              "shoulder": 153.41,
+              "hip": 178.69,
+              "knee": 80.05
+            },
+            {
+              "t": 0.8008,
+              "frame": 210.0,
+              "elbow": 176.38,
+              "shoulder": 152.04,
+              "hip": 178.78,
+              "knee": 78.63
+            },
+            {
+              "t": 0.8342,
+              "frame": 211.0,
+              "elbow": 173.86,
+              "shoulder": 140.97,
+              "hip": 176.83,
+              "knee": 120.7
+            },
+            {
+              "t": 0.8675,
+              "frame": 212.0,
+              "elbow": 173.88,
+              "shoulder": 140.43,
+              "hip": 176.88,
+              "knee": 120.98
+            },
+            {
+              "t": 0.9009,
+              "frame": 213.0,
+              "elbow": 173.95,
+              "shoulder": 140.58,
+              "hip": 176.87,
+              "knee": 120.78
+            },
+            {
+              "t": 0.9343,
+              "frame": 214.0,
+              "elbow": 173.95,
+              "shoulder": 140.61,
+              "hip": 176.92,
+              "knee": 120.77
+            },
+            {
+              "t": 0.9676,
+              "frame": 215.0,
+              "elbow": 173.99,
+              "shoulder": 140.7,
+              "hip": 176.89,
+              "knee": 120.64
+            },
+            {
+              "t": 1.001,
+              "frame": 216.0,
+              "elbow": 172.42,
+              "shoulder": 156.83,
+              "hip": 174.32,
+              "knee": 131.94
+            }
+          ]
+        }
       },
       "merged": {
         "angles": {
-          "elbow": 102.0858892936694,
-          "shoulder": 137.946625769547,
-          "hip": 145.37290541604517,
-          "knee": 163.65070756042275
+          "elbow": 161.44741144977326,
+          "shoulder": 116.2388179730213,
+          "hip": 129.9339025323008,
+          "knee": 132.34164144865875
         },
         "space": "3d",
         "source": "youtube_self_measured",
-        "method": "median of front + side release angles"
+        "method": "median of front + side"
+      }
+    }
+  },
+  "Devin Booker": {
+    "sample_count": 5,
+    "metrics": {
+      "Elbow angle": 140.7538577589378,
+      "Shoulder angle": 125.501699124018,
+      "Hip angle": 153.49745593677824,
+      "Knee angle": 159.5741105252246
+    },
+    "meta": {
+      "space": "3d",
+      "hand": "right",
+      "source": "youtube_self_measured",
+      "primary_view": "merged",
+      "player_key": "devin_booker"
+    },
+    "views": {
+      "merged": {
+        "angles": {
+          "elbow": 140.7538577589378,
+          "shoulder": 125.501699124018,
+          "hip": 153.49745593677824,
+          "knee": 159.5741105252246
+        },
+        "space": "3d",
+        "source": "youtube_self_measured",
+        "method": "median of 5 clips",
+        "clips": [
+          {
+            "youtube_url": "https://www.youtube.com/watch?v=9cz8R4x1DHw",
+            "score": 274.0963926081198,
+            "angles": {
+              "elbow": 154.28854763652907,
+              "shoulder": 148.25022574047486,
+              "hip": 174.12285291162817,
+              "knee": 161.61909956521748
+            },
+            "person_index": 1,
+            "release_frame_index": 214,
+            "space": "3d",
+            "hand": "right",
+            "view": "side"
+          },
+          {
+            "youtube_url": "https://www.youtube.com/watch?v=I9zmzIx-JMI",
+            "score": 209.1828179682119,
+            "angles": {
+              "elbow": 134.06224548019466,
+              "shoulder": 80.51353898663054,
+              "hip": 109.66735955257853,
+              "knee": 139.62187995571907
+            },
+            "person_index": 1,
+            "release_frame_index": 200,
+            "space": "3d",
+            "hand": "right",
+            "view": "side"
+          },
+          {
+            "youtube_url": "https://www.youtube.com/watch?v=eZpesyWXDTE",
+            "score": 194.20564878513616,
+            "angles": {
+              "elbow": 140.7538577589378,
+              "shoulder": 125.501699124018,
+              "hip": 175.56980166914025,
+              "knee": 168.45982300400615
+            },
+            "person_index": 0,
+            "release_frame_index": 232,
+            "space": "3d",
+            "hand": "right",
+            "view": "side"
+          },
+          {
+            "youtube_url": "https://www.youtube.com/watch?v=zQqSplwdvgI",
+            "score": 236.29728887487119,
+            "angles": {
+              "elbow": 137.3514573700238,
+              "shoulder": 119.12590005140437,
+              "hip": 153.49745593677824,
+              "knee": 159.5741105252246
+            },
+            "person_index": 1,
+            "release_frame_index": 108,
+            "space": "3d",
+            "hand": "right",
+            "view": "side"
+          },
+          {
+            "youtube_url": "https://www.youtube.com/watch?v=eMja1BtQeGw",
+            "score": 175.79199794978928,
+            "angles": {
+              "elbow": 158.35380781791602,
+              "shoulder": 142.94571428048346,
+              "hip": 22.877676120182073,
+              "knee": 44.053501050807675
+            },
+            "person_index": 0,
+            "release_frame_index": 197,
+            "space": "3d",
+            "hand": "right",
+            "view": "side"
+          }
+        ]
+      }
+    }
+  },
+  "Kevin Durant": {
+    "sample_count": 5,
+    "metrics": {
+      "Elbow angle": 141.6344592044522,
+      "Shoulder angle": 139.6134030372606,
+      "Hip angle": 132.79881949551736,
+      "Knee angle": 142.60753549814805
+    },
+    "meta": {
+      "space": "3d",
+      "hand": "right",
+      "source": "youtube_self_measured",
+      "primary_view": "merged",
+      "player_key": "kevin_durant"
+    },
+    "views": {
+      "merged": {
+        "angles": {
+          "elbow": 141.6344592044522,
+          "shoulder": 139.6134030372606,
+          "hip": 132.79881949551736,
+          "knee": 142.60753549814805
+        },
+        "space": "3d",
+        "source": "youtube_self_measured",
+        "method": "median of 5 clips",
+        "clips": [
+          {
+            "youtube_url": "https://www.youtube.com/watch?v=R05IWAz9qfE",
+            "score": 203.729392867699,
+            "angles": {
+              "elbow": 141.6344592044522,
+              "shoulder": 139.6134030372606,
+              "hip": 123.49883235175604,
+              "knee": 105.50554231952358
+            },
+            "person_index": 1,
+            "release_frame_index": 127,
+            "space": "3d",
+            "hand": "right",
+            "view": "side"
+          },
+          {
+            "youtube_url": "https://www.youtube.com/watch?v=GWpewFKSkA0",
+            "score": 225.26748203640764,
+            "angles": {
+              "elbow": 127.55638095344484,
+              "shoulder": 120.33304148712305,
+              "hip": 167.38347252825787,
+              "knee": 142.60753549814805
+            },
+            "person_index": 0,
+            "release_frame_index": 193,
+            "space": "3d",
+            "hand": "right",
+            "view": "side"
+          },
+          {
+            "youtube_url": "https://www.youtube.com/watch?v=59epmjId_z0",
+            "score": 262.3903931243775,
+            "angles": {
+              "elbow": 143.10222698093617,
+              "shoulder": 151.11286791209017,
+              "hip": 147.13009222947483,
+              "knee": 145.18194190138155
+            },
+            "person_index": 0,
+            "release_frame_index": 103,
+            "space": "3d",
+            "hand": "right",
+            "view": "side"
+          },
+          {
+            "youtube_url": "https://www.youtube.com/watch?v=vZHJ1mUE9tY",
+            "score": 261.21880725802305,
+            "angles": {
+              "elbow": 139.0051992680277,
+              "shoulder": 157.35428022731634,
+              "hip": 132.79881949551736,
+              "knee": 135.580082932003
+            },
+            "person_index": 2,
+            "release_frame_index": 216,
+            "space": "3d",
+            "hand": "right",
+            "view": "side"
+          },
+          {
+            "youtube_url": "https://www.youtube.com/watch?v=uEvKL28z51g",
+            "score": 223.41175659442968,
+            "angles": {
+              "elbow": 166.6457088623016,
+              "shoulder": 122.39484326611297,
+              "hip": 12.704865554718529,
+              "knee": 162.14993473097854
+            },
+            "person_index": 0,
+            "release_frame_index": 4,
+            "space": "3d",
+            "hand": "right",
+            "view": "side"
+          }
+        ]
+      }
+    }
+  },
+  "Donovan Mitchell": {
+    "sample_count": 5,
+    "metrics": {
+      "Elbow angle": 132.83870537130397,
+      "Shoulder angle": 110.44068064788053,
+      "Hip angle": 150.73230072713565,
+      "Knee angle": 134.53609752824693
+    },
+    "meta": {
+      "space": "3d",
+      "hand": "right",
+      "source": "youtube_self_measured",
+      "primary_view": "merged",
+      "player_key": "donovan_mitchell"
+    },
+    "views": {
+      "merged": {
+        "angles": {
+          "elbow": 132.83870537130397,
+          "shoulder": 110.44068064788053,
+          "hip": 150.73230072713565,
+          "knee": 134.53609752824693
+        },
+        "space": "3d",
+        "source": "youtube_self_measured",
+        "method": "median of 5 clips",
+        "clips": [
+          {
+            "youtube_url": "https://www.youtube.com/watch?v=FNl48HFXgLQ",
+            "score": 282.85486109338405,
+            "angles": {
+              "elbow": 158.728966345304,
+              "shoulder": 153.96683579836542,
+              "hip": 172.27840689501573,
+              "knee": 163.94941494956234
+            },
+            "person_index": 0,
+            "release_frame_index": 0,
+            "space": "3d",
+            "hand": "right",
+            "view": "side"
+          },
+          {
+            "youtube_url": "https://www.youtube.com/watch?v=zdTrpSSCrLo",
+            "score": 235.98997380465246,
+            "angles": {
+              "elbow": 132.83870537130397,
+              "shoulder": 127.63921226514617,
+              "hip": 173.0929301614931,
+              "knee": 167.36626086902166
+            },
+            "person_index": 0,
+            "release_frame_index": 145,
+            "space": "3d",
+            "hand": "right",
+            "view": "side"
+          },
+          {
+            "youtube_url": "https://www.youtube.com/watch?v=WiF2NRgf2z0",
+            "score": 229.20708175014386,
+            "angles": {
+              "elbow": 136.41200916457464,
+              "shoulder": 109.18778458775718,
+              "hip": 139.61941696446493,
+              "knee": 134.53609752824693
+            },
+            "person_index": 0,
+            "release_frame_index": 197,
+            "space": "3d",
+            "hand": "right",
+            "view": "side"
+          },
+          {
+            "youtube_url": "https://www.youtube.com/watch?v=HLXtWObcHm4",
+            "score": 121.48574463890162,
+            "angles": {
+              "elbow": 129.3511135418111,
+              "shoulder": 110.44068064788053,
+              "hip": 70.23998071664602,
+              "knee": 110.25530088085674
+            },
+            "person_index": 0,
+            "release_frame_index": 17,
+            "space": "3d",
+            "hand": "right",
+            "view": "side"
+          },
+          {
+            "youtube_url": "https://www.youtube.com/watch?v=Fya_qoNVmYs",
+            "score": 143.67644713145333,
+            "angles": {
+              "elbow": 118.51628027234719,
+              "shoulder": 85.76151800772787,
+              "hip": 150.73230072713565,
+              "knee": 114.02413768868635
+            },
+            "person_index": 0,
+            "release_frame_index": 128,
+            "space": "3d",
+            "hand": "right",
+            "view": "side"
+          }
+        ]
+      }
+    }
+  },
+  "Anthony Edwards": {
+    "sample_count": 5,
+    "metrics": {
+      "Elbow angle": 135.87516858327328,
+      "Shoulder angle": 127.77445368430989,
+      "Hip angle": 159.3065897496159,
+      "Knee angle": 155.66964036515537
+    },
+    "meta": {
+      "space": "3d",
+      "hand": "right",
+      "source": "youtube_self_measured",
+      "primary_view": "merged",
+      "player_key": "anthony_edwards"
+    },
+    "views": {
+      "merged": {
+        "angles": {
+          "elbow": 135.87516858327328,
+          "shoulder": 127.77445368430989,
+          "hip": 159.3065897496159,
+          "knee": 155.66964036515537
+        },
+        "space": "3d",
+        "source": "youtube_self_measured",
+        "method": "median of 5 clips",
+        "clips": [
+          {
+            "youtube_url": "https://www.youtube.com/watch?v=AF2AlZ5HZzw",
+            "score": 189.71487451051385,
+            "angles": {
+              "elbow": 135.87516858327328,
+              "shoulder": 127.77445368430989,
+              "hip": 159.3065897496159,
+              "knee": 115.18212162325844
+            },
+            "person_index": 0,
+            "release_frame_index": 43,
+            "space": "3d",
+            "hand": "right",
+            "view": "side"
+          },
+          {
+            "youtube_url": "https://www.youtube.com/watch?v=bc3fWBK50cE",
+            "score": 217.79583545826276,
+            "angles": {
+              "elbow": 107.634690622336,
+              "shoulder": 147.72367785243262,
+              "hip": 136.8696050832183,
+              "knee": 158.19109455582998
+            },
+            "person_index": 0,
+            "release_frame_index": 193,
+            "space": "3d",
+            "hand": "right",
+            "view": "side"
+          },
+          {
+            "youtube_url": "https://www.youtube.com/watch?v=Mx4H3OWD0KM",
+            "score": 238.40013266787423,
+            "angles": {
+              "elbow": 140.7519673921159,
+              "shoulder": 115.82961966222524,
+              "hip": 167.48244302802271,
+              "knee": 172.84411132077716
+            },
+            "person_index": 0,
+            "release_frame_index": 209,
+            "space": "3d",
+            "hand": "right",
+            "view": "side"
+          },
+          {
+            "youtube_url": "https://www.youtube.com/watch?v=UlyWurWRIf0",
+            "score": 311.7062216369014,
+            "angles": {
+              "elbow": 177.20281404049842,
+              "shoulder": 165.10474131383882,
+              "hip": 142.18453248906164,
+              "knee": 155.66964036515537
+            },
+            "person_index": 0,
+            "release_frame_index": 109,
+            "space": "3d",
+            "hand": "right",
+            "view": "side"
+          },
+          {
+            "youtube_url": "https://www.youtube.com/watch?v=nz1xi7DkMw4",
+            "score": 224.00460908139604,
+            "angles": {
+              "elbow": 128.1470755875036,
+              "shoulder": 117.04686396065291,
+              "hip": 163.31596064270892,
+              "knee": 154.9147824039456
+            },
+            "person_index": 1,
+            "release_frame_index": 32,
+            "space": "3d",
+            "hand": "right",
+            "view": "side"
+          }
+        ]
+      }
+    }
+  },
+  "Tyrese Maxey": {
+    "sample_count": 5,
+    "metrics": {
+      "Elbow angle": 131.00412592779458,
+      "Shoulder angle": 107.82895714954365,
+      "Hip angle": 157.91792080226674,
+      "Knee angle": 166.76228258545234
+    },
+    "meta": {
+      "space": "3d",
+      "hand": "right",
+      "source": "youtube_self_measured",
+      "primary_view": "merged",
+      "player_key": "tyrese_maxey"
+    },
+    "views": {
+      "merged": {
+        "angles": {
+          "elbow": 131.00412592779458,
+          "shoulder": 107.82895714954365,
+          "hip": 157.91792080226674,
+          "knee": 166.76228258545234
+        },
+        "space": "3d",
+        "source": "youtube_self_measured",
+        "method": "median of 5 clips",
+        "clips": [
+          {
+            "youtube_url": "https://www.youtube.com/watch?v=mRZj6-OogWw",
+            "score": 287.82638921384466,
+            "angles": {
+              "elbow": 172.20209526387833,
+              "shoulder": 135.30645816198447,
+              "hip": 171.92125020378975,
+              "knee": 168.519474541828
+            },
+            "person_index": 0,
+            "release_frame_index": 239,
+            "space": "3d",
+            "hand": "right",
+            "view": "side"
+          },
+          {
+            "youtube_url": "https://www.youtube.com/watch?v=1I1rutw4f8s",
+            "score": 227.57480303795256,
+            "angles": {
+              "elbow": 144.98825486555262,
+              "shoulder": 172.6481619988157,
+              "hip": 92.69326458005854,
+              "knee": 101.59927831062201
+            },
+            "person_index": 0,
+            "release_frame_index": 195,
+            "space": "3d",
+            "hand": "right",
+            "view": "side"
+          },
+          {
+            "youtube_url": "https://www.youtube.com/watch?v=8T8R2RWs5-M",
+            "score": 115.1646385093702,
+            "angles": {
+              "elbow": 127.13619616028107,
+              "shoulder": 104.33533852838823,
+              "hip": 57.229301146110735,
+              "knee": 89.66635263972259
+            },
+            "person_index": 0,
+            "release_frame_index": 134,
+            "space": "3d",
+            "hand": "right",
+            "view": "side"
+          },
+          {
+            "youtube_url": "https://www.youtube.com/watch?v=_N4AggbWdgY",
+            "score": 202.56667650520993,
+            "angles": {
+              "elbow": 114.89108517956979,
+              "shoulder": 107.82895714954365,
+              "hip": 157.91792080226674,
+              "knee": 166.76228258545234
+            },
+            "person_index": 0,
+            "release_frame_index": 213,
+            "space": "3d",
+            "hand": "right",
+            "view": "side"
+          },
+          {
+            "youtube_url": "https://www.youtube.com/watch?v=1K-r75tfj-g",
+            "score": 207.6690967052679,
+            "angles": {
+              "elbow": 131.00412592779458,
+              "shoulder": 84.10690931985735,
+              "hip": 173.17778630991222,
+              "knee": 168.91323037670267
+            },
+            "person_index": 0,
+            "release_frame_index": 80,
+            "space": "3d",
+            "hand": "right",
+            "view": "side"
+          }
+        ]
+      }
+    }
+  },
+  "Luka Don\u010di\u0107": {
+    "sample_count": 5,
+    "metrics": {
+      "Elbow angle": 138.51454713295175,
+      "Shoulder angle": 138.58407987201133,
+      "Hip angle": 158.6213825054595,
+      "Knee angle": 146.90104121064556
+    },
+    "meta": {
+      "space": "3d",
+      "hand": "right",
+      "source": "youtube_self_measured",
+      "primary_view": "merged",
+      "player_key": "luka_don_i"
+    },
+    "views": {
+      "merged": {
+        "angles": {
+          "elbow": 138.51454713295175,
+          "shoulder": 138.58407987201133,
+          "hip": 158.6213825054595,
+          "knee": 146.90104121064556
+        },
+        "space": "3d",
+        "source": "youtube_self_measured",
+        "method": "median of 5 clips",
+        "clips": [
+          {
+            "youtube_url": "https://www.youtube.com/watch?v=3sT9Xf_rsyM",
+            "score": 210.06394473943783,
+            "angles": {
+              "elbow": 137.74542276607667,
+              "shoulder": 74.61572903357637,
+              "hip": 145.5291910365334,
+              "knee": 146.90104121064556
+            },
+            "person_index": 0,
+            "release_frame_index": 202,
+            "space": "3d",
+            "hand": "right",
+            "view": "side"
+          },
+          {
+            "youtube_url": "https://www.youtube.com/watch?v=wcL0hkCIORU",
+            "score": 249.36790448274888,
+            "angles": {
+              "elbow": 138.51454713295175,
+              "shoulder": 138.58407987201133,
+              "hip": 160.60555934082484,
+              "knee": 139.67926469921025
+            },
+            "person_index": 0,
+            "release_frame_index": 221,
+            "space": "3d",
+            "hand": "right",
+            "view": "side"
+          },
+          {
+            "youtube_url": "https://www.youtube.com/watch?v=fOrgz5KtS8c",
+            "score": 242.87234265508607,
+            "angles": {
+              "elbow": 120.11153522516841,
+              "shoulder": 164.56416730814001,
+              "hip": 158.78596949548438,
+              "knee": 169.8412798458625
+            },
+            "person_index": 0,
+            "release_frame_index": 225,
+            "space": "3d",
+            "hand": "right",
+            "view": "side"
+          },
+          {
+            "youtube_url": "https://www.youtube.com/watch?v=WA_vLGgb8RA",
+            "score": 204.75814378983395,
+            "angles": {
+              "elbow": 144.69931806826997,
+              "shoulder": 135.19827017985,
+              "hip": 39.24283181066719,
+              "knee": 138.85639273537208
+            },
+            "person_index": 0,
+            "release_frame_index": 106,
+            "space": "3d",
+            "hand": "right",
+            "view": "side"
+          },
+          {
+            "youtube_url": "https://www.youtube.com/watch?v=dO14Pt11sE8",
+            "score": 280.00953978272787,
+            "angles": {
+              "elbow": 155.4541106257925,
+              "shoulder": 155.77434505296145,
+              "hip": 158.6213825054595,
+              "knee": 164.3258451974807
+            },
+            "person_index": 0,
+            "release_frame_index": 233,
+            "space": "3d",
+            "hand": "right",
+            "view": "side"
+          }
+        ]
+      }
+    }
+  },
+  "Jamal Murray": {
+    "sample_count": 5,
+    "metrics": {
+      "Elbow angle": 147.54273712565822,
+      "Shoulder angle": 133.8170520368149,
+      "Hip angle": 150.58656055187254,
+      "Knee angle": 139.10596724508187
+    },
+    "meta": {
+      "space": "3d",
+      "hand": "right",
+      "source": "youtube_self_measured",
+      "primary_view": "merged",
+      "player_key": "jamal_murray"
+    },
+    "views": {
+      "merged": {
+        "angles": {
+          "elbow": 147.54273712565822,
+          "shoulder": 133.8170520368149,
+          "hip": 150.58656055187254,
+          "knee": 139.10596724508187
+        },
+        "space": "3d",
+        "source": "youtube_self_measured",
+        "method": "median of 5 clips",
+        "clips": [
+          {
+            "youtube_url": "https://www.youtube.com/watch?v=w-ks1Skt1Mk",
+            "score": 278.76910296082906,
+            "angles": {
+              "elbow": 147.54273712565822,
+              "shoulder": 169.52969735006533,
+              "hip": 153.22737131006377,
+              "knee": 166.23126731670237
+            },
+            "person_index": 0,
+            "release_frame_index": 231,
+            "space": "3d",
+            "hand": "right",
+            "view": "side"
+          },
+          {
+            "youtube_url": "https://www.youtube.com/watch?v=DSS0LRY-yUE",
+            "score": 224.4303284737075,
+            "angles": {
+              "elbow": 153.61067981629884,
+              "shoulder": 150.16252115691486,
+              "hip": 118.45407456110797,
+              "knee": 99.72146931710202
+            },
+            "person_index": 0,
+            "release_frame_index": 79,
+            "space": "3d",
+            "hand": "right",
+            "view": "side"
+          },
+          {
+            "youtube_url": "https://www.youtube.com/watch?v=zSXuH4mOYM8",
+            "score": 169.25223554236757,
+            "angles": {
+              "elbow": 105.28285705513386,
+              "shoulder": 71.52134512701159,
+              "hip": 150.58656055187254,
+              "knee": 139.10596724508187
+            },
+            "person_index": 1,
+            "release_frame_index": 130,
+            "space": "3d",
+            "hand": "right",
+            "view": "side"
+          },
+          {
+            "youtube_url": "https://www.youtube.com/watch?v=M03wAp95sAU",
+            "score": 146.06225338554967,
+            "angles": {
+              "elbow": 151.41222634184763,
+              "shoulder": 107.27930295888756,
+              "hip": 55.033630180598585,
+              "knee": 88.50659278374863
+            },
+            "person_index": 0,
+            "release_frame_index": 239,
+            "space": "3d",
+            "hand": "right",
+            "view": "side"
+          },
+          {
+            "youtube_url": "https://www.youtube.com/watch?v=eK1O4Okcw8E",
+            "score": 252.43115124863957,
+            "angles": {
+              "elbow": 143.45076668879219,
+              "shoulder": 133.8170520368149,
+              "hip": 152.32215162186029,
+              "knee": 149.23386996752615
+            },
+            "person_index": 1,
+            "release_frame_index": 203,
+            "space": "3d",
+            "hand": "right",
+            "view": "side"
+          }
+        ]
+      }
+    }
+  },
+  "Jalen Brunson": {
+    "sample_count": 5,
+    "metrics": {
+      "Elbow angle": 136.37007678425897,
+      "Shoulder angle": 108.6900765113897,
+      "Hip angle": 120.16475339632555,
+      "Knee angle": 146.08532911726655
+    },
+    "meta": {
+      "space": "3d",
+      "hand": "right",
+      "source": "youtube_self_measured",
+      "primary_view": "merged",
+      "player_key": "jalen_brunson"
+    },
+    "views": {
+      "merged": {
+        "angles": {
+          "elbow": 136.37007678425897,
+          "shoulder": 108.6900765113897,
+          "hip": 120.16475339632555,
+          "knee": 146.08532911726655
+        },
+        "space": "3d",
+        "source": "youtube_self_measured",
+        "method": "median of 5 clips",
+        "clips": [
+          {
+            "youtube_url": "https://www.youtube.com/watch?v=cau8Hrl1U-k",
+            "score": 241.08332598546292,
+            "angles": {
+              "elbow": 170.36008987504735,
+              "shoulder": 144.4186968923435,
+              "hip": 120.16475339632555,
+              "knee": 53.93024587503718
+            },
+            "person_index": 0,
+            "release_frame_index": 7,
+            "space": "3d",
+            "hand": "right",
+            "view": "side"
+          },
+          {
+            "youtube_url": "https://www.youtube.com/watch?v=HFFRD5xkM8E",
+            "score": 224.23694322595952,
+            "angles": {
+              "elbow": 151.55552972766014,
+              "shoulder": 153.95051258794555,
+              "hip": 44.2219264485821,
+              "knee": 154.3409451285119
+            },
+            "person_index": 0,
+            "release_frame_index": 117,
+            "space": "3d",
+            "hand": "right",
+            "view": "side"
+          },
+          {
+            "youtube_url": "https://www.youtube.com/watch?v=hvYnHIoonbE",
+            "score": 189.38287179591268,
+            "angles": {
+              "elbow": 112.48712868948311,
+              "shoulder": 90.66386228088828,
+              "hip": 129.07204104234165,
+              "knee": 146.08532911726655
+            },
+            "person_index": 0,
+            "release_frame_index": 192,
+            "space": "3d",
+            "hand": "right",
+            "view": "side"
+          },
+          {
+            "youtube_url": "https://www.youtube.com/watch?v=zxVGXgFwSng",
+            "score": 217.71589854279944,
+            "angles": {
+              "elbow": 136.37007678425897,
+              "shoulder": 90.11967733614782,
+              "hip": 112.67294559830289,
+              "knee": 135.6102755488484
+            },
+            "person_index": 1,
+            "release_frame_index": 38,
+            "space": "3d",
+            "hand": "right",
+            "view": "side"
+          },
+          {
+            "youtube_url": "https://www.youtube.com/watch?v=AAzMNxkvFP0",
+            "score": 219.5148755864908,
+            "angles": {
+              "elbow": 128.5840247330475,
+              "shoulder": 108.6900765113897,
+              "hip": 173.17492865836562,
+              "knee": 160.01798077127035
+            },
+            "person_index": 0,
+            "release_frame_index": 132,
+            "space": "3d",
+            "hand": "right",
+            "view": "side"
+          }
+        ]
+      }
+    }
+  },
+  "Jaylen Brown": {
+    "sample_count": 5,
+    "metrics": {
+      "Elbow angle": 149.80006504980156,
+      "Shoulder angle": 101.20586973677408,
+      "Hip angle": 144.10526845941723,
+      "Knee angle": 163.5699211213985
+    },
+    "meta": {
+      "space": "3d",
+      "hand": "right",
+      "source": "youtube_self_measured",
+      "primary_view": "merged",
+      "player_key": "jaylen_brown"
+    },
+    "views": {
+      "merged": {
+        "angles": {
+          "elbow": 149.80006504980156,
+          "shoulder": 101.20586973677408,
+          "hip": 144.10526845941723,
+          "knee": 163.5699211213985
+        },
+        "space": "3d",
+        "source": "youtube_self_measured",
+        "method": "median of 5 clips",
+        "clips": [
+          {
+            "youtube_url": "https://www.youtube.com/watch?v=fEjb9p9PMPs",
+            "score": 245.85358910627716,
+            "angles": {
+              "elbow": 155.39787599240407,
+              "shoulder": 98.96022985898715,
+              "hip": 171.20559571270545,
+              "knee": 167.14812845726178
+            },
+            "person_index": 0,
+            "release_frame_index": 1,
+            "space": "3d",
+            "hand": "right",
+            "view": "side"
+          },
+          {
+            "youtube_url": "https://www.youtube.com/watch?v=kAqeauHptAY",
+            "score": 278.4492467117114,
+            "angles": {
+              "elbow": 158.07832673010648,
+              "shoulder": 147.92542439263934,
+              "hip": 144.10526845941723,
+              "knee": 163.5699211213985
+            },
+            "person_index": 1,
+            "release_frame_index": 194,
+            "space": "3d",
+            "hand": "right",
+            "view": "side"
+          },
+          {
+            "youtube_url": "https://www.youtube.com/watch?v=HQZjno8Yyxg",
+            "score": 196.421063715191,
+            "angles": {
+              "elbow": 113.08128489427213,
+              "shoulder": 101.20586973677408,
+              "hip": 114.12141018414864,
+              "knee": 170.7298684800817
+            },
+            "person_index": 0,
+            "release_frame_index": 126,
+            "space": "3d",
+            "hand": "right",
+            "view": "side"
+          },
+          {
+            "youtube_url": "https://www.youtube.com/watch?v=uP772bU4xIA",
+            "score": 209.4285938851084,
+            "angles": {
+              "elbow": 149.80006504980156,
+              "shoulder": 132.78085970891087,
+              "hip": 167.40057127452468,
+              "knee": 80.2889297642557
+            },
+            "person_index": 0,
+            "release_frame_index": 94,
+            "space": "3d",
+            "hand": "right",
+            "view": "side"
+          },
+          {
+            "youtube_url": "https://www.youtube.com/watch?v=zODyZ3A-y1Q",
+            "score": 196.69021735473905,
+            "angles": {
+              "elbow": 124.32897711997563,
+              "shoulder": 79.15907468461386,
+              "hip": 136.29554510202854,
+              "knee": 145.5143929524213
+            },
+            "person_index": 1,
+            "release_frame_index": 85,
+            "space": "3d",
+            "hand": "right",
+            "view": "side"
+          }
+        ]
+      }
+    }
+  },
+  "Kawhi Leonard": {
+    "sample_count": 5,
+    "metrics": {
+      "Elbow angle": 138.80799502765578,
+      "Shoulder angle": 109.15018841219467,
+      "Hip angle": 85.23922645093202,
+      "Knee angle": 146.64745508356563
+    },
+    "meta": {
+      "space": "3d",
+      "hand": "right",
+      "source": "youtube_self_measured",
+      "primary_view": "merged",
+      "player_key": "kawhi_leonard"
+    },
+    "views": {
+      "merged": {
+        "angles": {
+          "elbow": 138.80799502765578,
+          "shoulder": 109.15018841219467,
+          "hip": 85.23922645093202,
+          "knee": 146.64745508356563
+        },
+        "space": "3d",
+        "source": "youtube_self_measured",
+        "method": "median of 5 clips",
+        "clips": [
+          {
+            "youtube_url": "https://www.youtube.com/watch?v=qTR93pnUkck",
+            "score": 246.5940159644411,
+            "angles": {
+              "elbow": 156.19660166561368,
+              "shoulder": 98.59682327617448,
+              "hip": 163.25334044296665,
+              "knee": 146.64745508356563
+            },
+            "person_index": 0,
+            "release_frame_index": 158,
+            "space": "3d",
+            "hand": "right",
+            "view": "side"
+          },
+          {
+            "youtube_url": "https://www.youtube.com/watch?v=iOVRLmDD3vk",
+            "score": 165.88301806727858,
+            "angles": {
+              "elbow": 126.98933572451617,
+              "shoulder": 105.82635866309869,
+              "hip": 67.6232520299016,
+              "knee": 128.96603114817043
+            },
+            "person_index": 0,
+            "release_frame_index": 98,
+            "space": "3d",
+            "hand": "right",
+            "view": "side"
+          },
+          {
+            "youtube_url": "https://www.youtube.com/watch?v=hdoHVMbTJO4",
+            "score": 257.56207514615875,
+            "angles": {
+              "elbow": 172.92600651501513,
+              "shoulder": 166.75144554690098,
+              "hip": 178.38449396718656,
+              "knee": 169.6048200213961
+            },
+            "person_index": 0,
+            "release_frame_index": 81,
+            "space": "3d",
+            "hand": "right",
+            "view": "side"
+          },
+          {
+            "youtube_url": "https://www.youtube.com/watch?v=MDndEoldPxI",
+            "score": 178.69731091696013,
+            "angles": {
+              "elbow": 136.0059982247028,
+              "shoulder": 109.15018841219467,
+              "hip": 51.95356232429541,
+              "knee": 169.16299727671083
+            },
+            "person_index": 0,
+            "release_frame_index": 20,
+            "space": "3d",
+            "hand": "right",
+            "view": "side"
+          },
+          {
+            "youtube_url": "https://www.youtube.com/watch?v=xe3lKV4SW8U",
+            "score": 153.63037994667053,
+            "angles": {
+              "elbow": 138.80799502765578,
+              "shoulder": 145.10130985580605,
+              "hip": 85.23922645093202,
+              "knee": 58.746835364294945
+            },
+            "person_index": 0,
+            "release_frame_index": 227,
+            "space": "3d",
+            "hand": "right",
+            "view": "side"
+          }
+        ]
+      }
+    }
+  },
+  "Norman Powell": {
+    "sample_count": 4,
+    "metrics": {
+      "Elbow angle": 157.6926458535798,
+      "Shoulder angle": 131.34306355499592,
+      "Hip angle": 162.51409049554502,
+      "Knee angle": 148.48332452593382
+    },
+    "meta": {
+      "space": "3d",
+      "hand": "right",
+      "source": "youtube_self_measured",
+      "primary_view": "merged",
+      "player_key": "norman_powell"
+    },
+    "views": {
+      "merged": {
+        "angles": {
+          "elbow": 157.6926458535798,
+          "shoulder": 131.34306355499592,
+          "hip": 162.51409049554502,
+          "knee": 148.48332452593382
+        },
+        "space": "3d",
+        "source": "youtube_self_measured",
+        "method": "median of 4 clips",
+        "clips": [
+          {
+            "youtube_url": "https://www.youtube.com/watch?v=VLaI_T-GfUw",
+            "score": 279.92256637366245,
+            "angles": {
+              "elbow": 161.2828745825301,
+              "shoulder": 143.9718614577106,
+              "hip": 164.80269255964737,
+              "knee": 151.15936292253713
+            },
+            "person_index": 0,
+            "release_frame_index": 100,
+            "space": "3d",
+            "hand": "right",
+            "view": "side"
+          },
+          {
+            "youtube_url": "https://www.youtube.com/watch?v=PRPvCTjN90k",
+            "score": 264.83959556672045,
+            "angles": {
+              "elbow": 154.1024171246295,
+              "shoulder": 133.19449169527508,
+              "hip": 138.05253734918495,
+              "knee": 145.80728612933052
+            },
+            "person_index": 0,
+            "release_frame_index": 105,
+            "space": "3d",
+            "hand": "right",
+            "view": "side"
+          },
+          {
+            "youtube_url": "https://www.youtube.com/watch?v=Rg8DQqzWk58",
+            "score": 176.26343500768036,
+            "angles": {
+              "elbow": 104.28824314166204,
+              "shoulder": 85.19590539614323,
+              "hip": 173.6427630220898,
+              "knee": 171.31452000472436
+            },
+            "person_index": 0,
+            "release_frame_index": 19,
+            "space": "3d",
+            "hand": "right",
+            "view": "side"
+          },
+          {
+            "youtube_url": "https://www.youtube.com/watch?v=_in49VgplcQ",
+            "score": 231.6386285985556,
+            "angles": {
+              "elbow": 169.95303945810463,
+              "shoulder": 129.4916354147168,
+              "hip": 160.22548843144267,
+              "knee": 110.49542272033975
+            },
+            "person_index": 0,
+            "release_frame_index": 170,
+            "space": "3d",
+            "hand": "right",
+            "view": "side"
+          }
+        ]
+      }
+    }
+  },
+  "De'Aaron Fox": {
+    "sample_count": 5,
+    "metrics": {
+      "Elbow angle": 142.67000735250838,
+      "Shoulder angle": 110.97233184601907,
+      "Hip angle": 158.39531634848424,
+      "Knee angle": 166.80173081954723
+    },
+    "meta": {
+      "space": "3d",
+      "hand": "right",
+      "source": "youtube_self_measured",
+      "primary_view": "merged",
+      "player_key": "deaaron_fox"
+    },
+    "views": {
+      "merged": {
+        "angles": {
+          "elbow": 142.67000735250838,
+          "shoulder": 110.97233184601907,
+          "hip": 158.39531634848424,
+          "knee": 166.80173081954723
+        },
+        "space": "3d",
+        "source": "youtube_self_measured",
+        "method": "median of 5 clips",
+        "clips": [
+          {
+            "youtube_url": "https://www.youtube.com/watch?v=6E4tK2F-snI",
+            "score": 248.80714589505965,
+            "angles": {
+              "elbow": 168.5803277301805,
+              "shoulder": 160.85125436473845,
+              "hip": 2.9446173396186355,
+              "knee": 142.04998777474054
+            },
+            "person_index": 0,
+            "release_frame_index": 9,
+            "space": "3d",
+            "hand": "right",
+            "view": "side"
+          },
+          {
+            "youtube_url": "https://www.youtube.com/watch?v=CMhdBXfQk1A",
+            "score": 216.94755212900705,
+            "angles": {
+              "elbow": 134.88205916940285,
+              "shoulder": 91.81513520953936,
+              "hip": 165.9270909220704,
+              "knee": 166.80173081954723
+            },
+            "person_index": 0,
+            "release_frame_index": 85,
+            "space": "3d",
+            "hand": "right",
+            "view": "side"
+          },
+          {
+            "youtube_url": "https://www.youtube.com/watch?v=rbioGUVlhOI",
+            "score": 220.14025350082272,
+            "angles": {
+              "elbow": 142.94853369167987,
+              "shoulder": 81.00335511801147,
+              "hip": 158.39531634848424,
+              "knee": 169.42339816490437
+            },
+            "person_index": 0,
+            "release_frame_index": 58,
+            "space": "3d",
+            "hand": "right",
+            "view": "side"
+          },
+          {
+            "youtube_url": "https://www.youtube.com/watch?v=QJiQotd65qE",
+            "score": 237.7874079306215,
+            "angles": {
+              "elbow": 142.67000735250838,
+              "shoulder": 110.97233184601907,
+              "hip": 167.96865400240557,
+              "knee": 166.62444668735847
+            },
+            "person_index": 0,
+            "release_frame_index": 1,
+            "space": "3d",
+            "hand": "right",
+            "view": "side"
+          },
+          {
+            "youtube_url": "https://www.youtube.com/watch?v=4JNqdQjrvtk",
+            "score": 239.84179460265955,
+            "angles": {
+              "elbow": 140.34818166159607,
+              "shoulder": 119.03996101457378,
+              "hip": 111.65911301124493,
+              "knee": 166.8017992114146
+            },
+            "person_index": 0,
+            "release_frame_index": 219,
+            "space": "3d",
+            "hand": "right",
+            "view": "side"
+          }
+        ]
+      }
+    }
+  },
+  "Shai Gilgeous-Alexander": {
+    "sample_count": 5,
+    "metrics": {
+      "Elbow angle": 127.23076247345396,
+      "Shoulder angle": 95.65835794888255,
+      "Hip angle": 150.23463057023747,
+      "Knee angle": 144.8998342331721
+    },
+    "meta": {
+      "space": "3d",
+      "hand": "right",
+      "source": "youtube_self_measured",
+      "primary_view": "merged",
+      "player_key": "shai_gilgeous_alexander"
+    },
+    "views": {
+      "merged": {
+        "angles": {
+          "elbow": 127.23076247345396,
+          "shoulder": 95.65835794888255,
+          "hip": 150.23463057023747,
+          "knee": 144.8998342331721
+        },
+        "space": "3d",
+        "source": "youtube_self_measured",
+        "method": "median of 5 clips",
+        "clips": [
+          {
+            "youtube_url": "https://www.youtube.com/watch?v=OCdzsQLHfXs",
+            "score": 184.79979417634914,
+            "angles": {
+              "elbow": 112.5878737514859,
+              "shoulder": 82.82390945761007,
+              "hip": 150.23463057023747,
+              "knee": 144.8998342331721
+            },
+            "person_index": 0,
+            "release_frame_index": 217,
+            "space": "3d",
+            "hand": "right",
+            "view": "side"
+          },
+          {
+            "youtube_url": "https://www.youtube.com/watch?v=J44v6Nb4bwg",
+            "score": 266.5727641514228,
+            "angles": {
+              "elbow": 153.6806817366806,
+              "shoulder": 136.92657677901013,
+              "hip": 157.79157651225276,
+              "knee": 167.4935918990133
+            },
+            "person_index": 1,
+            "release_frame_index": 228,
+            "space": "3d",
+            "hand": "right",
+            "view": "side"
+          },
+          {
+            "youtube_url": "https://www.youtube.com/watch?v=HGEMlhXLIJc",
+            "score": 198.3020365391313,
+            "angles": {
+              "elbow": 147.498510887385,
+              "shoulder": 118.83970579044885,
+              "hip": 98.7038474096891,
+              "knee": 96.0015560763913
+            },
+            "person_index": 1,
+            "release_frame_index": 201,
+            "space": "3d",
+            "hand": "right",
+            "view": "side"
+          },
+          {
+            "youtube_url": "https://www.youtube.com/watch?v=j2pv8cIX58s",
+            "score": 80.58845279597517,
+            "angles": {
+              "elbow": 113.93180129467649,
+              "shoulder": 73.11715207060563,
+              "hip": 76.79047407732759,
+              "knee": 99.0458661937218
+            },
+            "person_index": 0,
+            "release_frame_index": 102,
+            "space": "3d",
+            "hand": "right",
+            "view": "side"
+          },
+          {
+            "youtube_url": "https://www.youtube.com/watch?v=TlLyGAmAP3c",
+            "score": 210.07192973747428,
+            "angles": {
+              "elbow": 127.23076247345396,
+              "shoulder": 95.65835794888255,
+              "hip": 169.4925480837081,
+              "knee": 159.4459130974927
+            },
+            "person_index": 0,
+            "release_frame_index": 239,
+            "space": "3d",
+            "hand": "right",
+            "view": "side"
+          }
+        ]
+      }
+    }
+  },
+  "LeBron James": {
+    "sample_count": 5,
+    "metrics": {
+      "Elbow angle": 154.63218955718222,
+      "Shoulder angle": 122.44022247555824,
+      "Hip angle": 118.7796980908121,
+      "Knee angle": 137.5974669222312
+    },
+    "meta": {
+      "space": "3d",
+      "hand": "right",
+      "source": "youtube_self_measured",
+      "primary_view": "merged",
+      "player_key": "lebron_james"
+    },
+    "views": {
+      "merged": {
+        "angles": {
+          "elbow": 154.63218955718222,
+          "shoulder": 122.44022247555824,
+          "hip": 118.7796980908121,
+          "knee": 137.5974669222312
+        },
+        "space": "3d",
+        "source": "youtube_self_measured",
+        "method": "median of 5 clips",
+        "clips": [
+          {
+            "youtube_url": "https://www.youtube.com/watch?v=_uOyDh2C4WM",
+            "score": 259.0227609539536,
+            "angles": {
+              "elbow": 154.63218955718222,
+              "shoulder": 122.44022247555824,
+              "hip": 168.20748099112413,
+              "knee": 168.26447495505735
+            },
+            "person_index": 0,
+            "release_frame_index": 2,
+            "space": "3d",
+            "hand": "right",
+            "view": "side"
+          },
+          {
+            "youtube_url": "https://www.youtube.com/watch?v=yk3lVFS76ns",
+            "score": 204.17495173413448,
+            "angles": {
+              "elbow": 137.6910616885469,
+              "shoulder": 148.24279617979695,
+              "hip": 118.13994645006368,
+              "knee": 82.44339226703637
+            },
+            "person_index": 0,
+            "release_frame_index": 219,
+            "space": "3d",
+            "hand": "right",
+            "view": "side"
+          },
+          {
+            "youtube_url": "https://www.youtube.com/watch?v=wi-xw1IsrhE",
+            "score": 266.1215652080834,
+            "angles": {
+              "elbow": 160.617962011398,
+              "shoulder": 122.30001799067634,
+              "hip": 118.7796980908121,
+              "knee": 137.5974669222312
+            },
+            "person_index": 1,
+            "release_frame_index": 178,
+            "space": "3d",
+            "hand": "right",
+            "view": "side"
+          },
+          {
+            "youtube_url": "https://www.youtube.com/watch?v=k4KDr3xvIWc",
+            "score": 209.10290400055896,
+            "angles": {
+              "elbow": 167.21229469516456,
+              "shoulder": 97.41358394393586,
+              "hip": 72.89622593058104,
+              "knee": 161.74433166610754
+            },
+            "person_index": 0,
+            "release_frame_index": 5,
+            "space": "3d",
+            "hand": "right",
+            "view": "side"
+          },
+          {
+            "youtube_url": "https://www.youtube.com/watch?v=TMaPwZku-Q8",
+            "score": 200.5260985604043,
+            "angles": {
+              "elbow": 145.49287589689465,
+              "shoulder": 126.55774580688461,
+              "hip": 151.59194358071932,
+              "knee": 51.326505380902915
+            },
+            "person_index": 0,
+            "release_frame_index": 75,
+            "space": "3d",
+            "hand": "right",
+            "view": "side"
+          }
+        ]
+      }
+    }
+  },
+  "Victor Wembanyama": {
+    "sample_count": 5,
+    "metrics": {
+      "Elbow angle": 154.72368166866463,
+      "Shoulder angle": 127.56544974967699,
+      "Hip angle": 135.92370239223825,
+      "Knee angle": 154.96327399851293
+    },
+    "meta": {
+      "space": "3d",
+      "hand": "right",
+      "source": "youtube_self_measured",
+      "primary_view": "merged",
+      "player_key": "victor_wembanyama"
+    },
+    "views": {
+      "merged": {
+        "angles": {
+          "elbow": 154.72368166866463,
+          "shoulder": 127.56544974967699,
+          "hip": 135.92370239223825,
+          "knee": 154.96327399851293
+        },
+        "space": "3d",
+        "source": "youtube_self_measured",
+        "method": "median of 5 clips",
+        "clips": [
+          {
+            "youtube_url": "https://www.youtube.com/watch?v=DwQhf52gbmc",
+            "score": 171.64520585025025,
+            "angles": {
+              "elbow": 154.72368166866463,
+              "shoulder": 143.2946464130878,
+              "hip": 74.88306090870554,
+              "knee": 97.25385786914242
+            },
+            "person_index": 0,
+            "release_frame_index": 187,
+            "space": "3d",
+            "hand": "right",
+            "view": "side"
+          },
+          {
+            "youtube_url": "https://www.youtube.com/watch?v=n_HuLsswBPA",
+            "score": 297.5312808521199,
+            "angles": {
+              "elbow": 163.18516832965292,
+              "shoulder": 169.51513142756065,
+              "hip": 169.22652757053498,
+              "knee": 171.8983196963886
+            },
+            "person_index": 1,
+            "release_frame_index": 183,
+            "space": "3d",
+            "hand": "right",
+            "view": "side"
+          },
+          {
+            "youtube_url": "https://www.youtube.com/watch?v=tWO_bM_gHF4",
+            "score": 224.03576803585514,
+            "angles": {
+              "elbow": 135.27525848521364,
+              "shoulder": 102.84242975599794,
+              "hip": 163.0142370507525,
+              "knee": 159.74230250214265
+            },
+            "person_index": 0,
+            "release_frame_index": 210,
+            "space": "3d",
+            "hand": "right",
+            "view": "side"
+          },
+          {
+            "youtube_url": "https://www.youtube.com/watch?v=3tThD9cxg3A",
+            "score": 255.29972533690938,
+            "angles": {
+              "elbow": 148.96704623925268,
+              "shoulder": 127.56544974967699,
+              "hip": 135.92370239223825,
+              "knee": 154.96327399851293
+            },
+            "person_index": 1,
+            "release_frame_index": 232,
+            "space": "3d",
+            "hand": "right",
+            "view": "side"
+          },
+          {
+            "youtube_url": "https://www.youtube.com/watch?v=SfQoZVTpks4",
+            "score": 260.0076497439577,
+            "angles": {
+              "elbow": 156.92873104985154,
+              "shoulder": 119.4886208068931,
+              "hip": 110.29475682463044,
+              "knee": 153.51435574482502
+            },
+            "person_index": 1,
+            "release_frame_index": 84,
+            "space": "3d",
+            "hand": "right",
+            "view": "side"
+          }
+        ]
       }
     }
   }

@@ -43,6 +43,18 @@ CREATE TABLE IF NOT EXISTS sessions (
     views_json TEXT NOT NULL,
     created_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE IF NOT EXISTS player_timelines (
+    player_key TEXT NOT NULL,
+    view TEXT NOT NULL,
+    fps REAL NOT NULL,
+    t0 TEXT DEFAULT 'release',
+    after_sec REAL DEFAULT 1.0,
+    samples_json TEXT NOT NULL,
+    youtube_url TEXT DEFAULT '',
+    UNIQUE(player_key, view),
+    FOREIGN KEY(player_key) REFERENCES players(player_key) ON DELETE CASCADE
+);
 """
 
 
@@ -96,6 +108,33 @@ def upsert_player(
             float(angles["knee"]),
             space,
         ),
+    )
+    conn.commit()
+
+
+def upsert_timeline(
+    conn: sqlite3.Connection,
+    player_key: str,
+    view: str,
+    fps: float,
+    samples: List[Dict[str, Any]],
+    *,
+    t0: str = "release",
+    after_sec: float = 1.0,
+    youtube_url: str = "",
+) -> None:
+    conn.execute(
+        """
+        INSERT INTO player_timelines(player_key, view, fps, t0, after_sec, samples_json, youtube_url)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(player_key, view) DO UPDATE SET
+            fps=excluded.fps,
+            t0=excluded.t0,
+            after_sec=excluded.after_sec,
+            samples_json=excluded.samples_json,
+            youtube_url=excluded.youtube_url
+        """,
+        (player_key, view, float(fps), t0, float(after_sec), json.dumps(samples), youtube_url),
     )
     conn.commit()
 
@@ -198,49 +237,65 @@ def ensure_seeded(db_path: Path = DEFAULT_DB) -> Path:
                 source="archetype",
                 space="3d",
             )
-        # Always keep Stephen Curry in sync with models/nba_player_models.json
+        # Sync all player profiles from models/nba_player_models.json
         if LEGACY_JSON.exists():
             data = json.loads(LEGACY_JSON.read_text(encoding="utf-8"))
-            payload = data.get("Stephen Curry") or {}
-            meta = payload.get("meta") or {}
-            hand = str(meta.get("hand") or "right")
-            source = str(meta.get("source") or "legacy_json_self_measured")
+            for name, payload in data.items():
+                if not isinstance(payload, dict):
+                    continue
+                meta = payload.get("meta") or {}
+                hand = str(meta.get("hand") or "right")
+                source = str(meta.get("source") or "legacy_json_self_measured")
+                player_key = str(meta.get("player_key") or name.lower().replace(" ", "_"))
 
-            views_block = payload.get("views") or {}
-            if views_block:
-                for view_name, view_payload in views_block.items():
-                    ang = (view_payload or {}).get("angles") or {}
-                    if not all(k in ang for k in ("elbow", "shoulder", "hip", "knee")):
-                        continue
-                    upsert_player(
-                        conn,
-                        player_key="stephen_curry",
-                        display_name="Stephen Curry",
-                        angles={k: float(ang[k]) for k in ("elbow", "shoulder", "hip", "knee")},
-                        view=str(view_name),
-                        hand=hand,
-                        source=str((view_payload or {}).get("source") or source),
-                        space=str((view_payload or {}).get("space") or "3d"),
-                    )
-            else:
-                metrics = payload.get("metrics") or {}
-                angles = {
-                    "elbow": float(metrics.get("Elbow angle", 0)),
-                    "shoulder": float(metrics.get("Shoulder angle", 0)),
-                    "hip": float(metrics.get("Hip angle", 0)),
-                    "knee": float(metrics.get("Knee angle", 0)),
-                }
-                if all(angles.values()):
-                    upsert_player(
-                        conn,
-                        player_key="stephen_curry",
-                        display_name="Stephen Curry",
-                        angles=angles,
-                        view="merged",
-                        hand=hand,
-                        source=source,
-                        space=str(meta.get("space") or "3d"),
-                    )
+                views_block = payload.get("views") or {}
+                if views_block:
+                    for view_name, view_payload in views_block.items():
+                        ang = (view_payload or {}).get("angles") or {}
+                        if not all(k in ang for k in ("elbow", "shoulder", "hip", "knee")):
+                            continue
+                        upsert_player(
+                            conn,
+                            player_key=player_key,
+                            display_name=name,
+                            angles={k: float(ang[k]) for k in ("elbow", "shoulder", "hip", "knee")},
+                            view=str(view_name),
+                            hand=hand,
+                            source=str((view_payload or {}).get("source") or source),
+                            space=str((view_payload or {}).get("space") or "3d"),
+                        )
+                        timeline = (view_payload or {}).get("timeline") or {}
+                        samples = timeline.get("samples") if isinstance(timeline, dict) else None
+                        if samples:
+                            upsert_timeline(
+                                conn,
+                                player_key,
+                                str(view_name),
+                                float(timeline.get("fps") or 30),
+                                samples,
+                                t0=str(timeline.get("t0") or "release"),
+                                after_sec=float(timeline.get("after_sec") or 1.0),
+                                youtube_url=str(timeline.get("youtube_url") or ""),
+                            )
+                else:
+                    metrics = payload.get("metrics") or {}
+                    angles = {
+                        "elbow": float(metrics.get("Elbow angle", 0)),
+                        "shoulder": float(metrics.get("Shoulder angle", 0)),
+                        "hip": float(metrics.get("Hip angle", 0)),
+                        "knee": float(metrics.get("Knee angle", 0)),
+                    }
+                    if all(angles.values()):
+                        upsert_player(
+                            conn,
+                            player_key=player_key,
+                            display_name=name,
+                            angles=angles,
+                            view="merged",
+                            hand=hand,
+                            source=source,
+                            space=str(meta.get("space") or "3d"),
+                        )
     finally:
         conn.close()
     return db_path
