@@ -156,6 +156,72 @@ def canonical_landmarks(angles: Mapping[str, float], hand: str = "right") -> Dic
     }
 
 
+def _pose_point(pose: Sequence[Sequence[float]], index: int) -> Point3:
+    value = pose[index]
+    return (float(value[0]), float(value[1]), float(value[2]))
+
+
+def _midpoint(a: Point3, b: Point3) -> Point3:
+    return _scale(_add(a, b), 0.5)
+
+
+def _directed(start: Point3, end: Point3, fallback: Point3) -> Point3:
+    vector = _sub(end, start)
+    return _unit(vector if _norm(vector) > 1e-6 else fallback)
+
+
+def canonical_landmarks_from_pose(pose: Sequence[Sequence[float]]) -> Dict[str, List[float]]:
+    """Retarget a normalized 33-landmark pose onto fixed adult bone lengths."""
+    if len(pose) < 33:
+        raise ValueError("Expected 33 MediaPipe landmarks")
+    src = {index: _pose_point(pose, index) for index in range(33)}
+    source_pelvis = _midpoint(src[23], src[24])
+    source_shoulders = _midpoint(src[11], src[12])
+    torso_direction = _directed(source_pelvis, source_shoulders, (0.0, 1.0, 0.0))
+    hip_axis = _directed(src[23], src[24], (1.0, 0.0, 0.0))
+    shoulder_axis = _directed(src[11], src[12], (1.0, 0.0, 0.0))
+
+    pelvis = (0.0, 0.95, 0.0)
+    shoulder_center = _add(pelvis, _scale(torso_direction, 0.50))
+    points: Dict[str, Point3] = {
+        "pelvis": pelvis,
+        "spine": _midpoint(pelvis, shoulder_center),
+        "hip_l": _add(pelvis, _scale(hip_axis, -0.15)),
+        "hip_r": _add(pelvis, _scale(hip_axis, 0.15)),
+        "shoulder_l": _add(shoulder_center, _scale(shoulder_axis, -0.21)),
+        "shoulder_r": _add(shoulder_center, _scale(shoulder_axis, 0.21)),
+        "neck": _add(shoulder_center, _scale(torso_direction, 0.13)),
+    }
+    head_direction = _directed(source_shoulders, src[0], torso_direction)
+    points["head"] = _add(points["neck"], _scale(head_direction, 0.17))
+
+    for suffix, shoulder_index, elbow_index, wrist_index, hip_index, knee_index, ankle_index, toe_index in (
+        ("l", 11, 13, 15, 23, 25, 27, 31),
+        ("r", 12, 14, 16, 24, 26, 28, 32),
+    ):
+        shoulder = points[f"shoulder_{suffix}"]
+        upper_arm = _directed(src[shoulder_index], src[elbow_index], (0.0, -1.0, 0.0))
+        elbow = _add(shoulder, _scale(upper_arm, 0.31))
+        forearm = _directed(src[elbow_index], src[wrist_index], upper_arm)
+        wrist = _add(elbow, _scale(forearm, 0.27))
+        hip = points[f"hip_{suffix}"]
+        thigh = _directed(src[hip_index], src[knee_index], (0.0, -1.0, 0.0))
+        knee = _add(hip, _scale(thigh, 0.45))
+        shin = _directed(src[knee_index], src[ankle_index], thigh)
+        ankle = _add(knee, _scale(shin, 0.45))
+        foot = _directed(src[ankle_index], src[toe_index], (0.0, 0.0, 1.0))
+        toe = _add(ankle, _scale(foot, 0.25))
+        points[f"elbow_{suffix}"] = elbow
+        points[f"wrist_{suffix}"] = wrist
+        points[f"knee_{suffix}"] = knee
+        points[f"ankle_{suffix}"] = ankle
+        points[f"toe_{suffix}"] = toe
+
+    floor_y = min(points["toe_l"][1], points["toe_r"][1], points["ankle_l"][1], points["ankle_r"][1])
+    points = {name: (point[0], point[1] - floor_y, point[2]) for name, point in points.items()}
+    return {name: [round(value, 5) for value in points[name]] for name in LANDMARK_ORDER}
+
+
 def build_skeleton_timeline(
     samples: Sequence[Mapping[str, Any]],
     *,
@@ -163,12 +229,17 @@ def build_skeleton_timeline(
     view: str = "side",
     source_space: str = "3d",
 ) -> Dict[str, Any]:
-    """Convert angle samples into an API-ready canonical 3D animation."""
+    """Convert pose or angle samples into an API-ready canonical 3D animation."""
     frames: List[Dict[str, Any]] = []
     for index, sample in enumerate(samples):
         try:
             angles = {name: float(sample[name]) for name in REQUIRED_ANGLES}
-            landmarks = canonical_landmarks(angles, hand=hand)
+            pose = sample.get("pose") or []
+            landmarks = (
+                canonical_landmarks_from_pose(pose)
+                if len(pose) >= 33
+                else canonical_landmarks(angles, hand=hand)
+            )
         except (KeyError, TypeError, ValueError):
             continue
         frames.append(

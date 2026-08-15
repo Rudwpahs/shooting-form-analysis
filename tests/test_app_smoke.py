@@ -16,7 +16,7 @@ class FlaskSmokeTests(unittest.TestCase):
         self.assertEqual(res.status_code, 200)
         data = res.get_json()
         self.assertTrue(data["ok"])
-        self.assertEqual(data["compare"], "angles_deg_only")
+        self.assertEqual(data["compare"], "motion_dtw_with_angle_fallback")
 
     def test_index_html(self):
         res = self.client.get("/")

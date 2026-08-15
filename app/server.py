@@ -1,4 +1,4 @@
-"""Flask API + HTML front for angle-only shooting form analysis."""
+"""Flask API + HTML front for full-motion shooting form analysis."""
 
 from __future__ import annotations
 
@@ -65,7 +65,7 @@ def health():
         n = conn.execute("SELECT COUNT(*) AS c FROM player_angles").fetchone()["c"]
     finally:
         conn.close()
-    return jsonify({"ok": True, "compare": "angles_deg_only", "players": n})
+    return jsonify({"ok": True, "compare": "motion_dtw_with_angle_fallback", "players": n})
 
 
 @app.get("/api/players")
@@ -174,7 +174,13 @@ def _collect_videos():
 
 def _query_views(session):
     views = [
-        {"view": view.view, "space": view.space or "3d", "angles": view.release_angles}
+        {
+            "view": view.view,
+            "space": view.space or "3d",
+            "angles": view.release_angles,
+            "timeline": view.timeline,
+            "quality": view.motion_quality,
+        }
         for view in session.views
         if view.release_angles and not view.error
     ]

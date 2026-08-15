@@ -1,4 +1,4 @@
-"""Angle-only similarity matching (no length / height features)."""
+"""Whole-motion similarity with a release-angle compatibility fallback."""
 
 from __future__ import annotations
 
@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from typing import Dict, List, Mapping, Optional, Sequence
 
 from .angles import JOINT_KEYS, AngleSnapshot, angle_distance, angles_plausible, normalize_angle_dict, similarity_score
+from .motion import motion_distance, motion_similarity_score
 
 
 DEFAULT_WEIGHTS = {
@@ -27,6 +28,9 @@ class MatchResult:
     deltas_deg: Dict[str, float]
     matched_view: str = "merged"
     matched_space: str = "3d"
+    method: str = "release_angles_v1"
+    motion_distance: Optional[float] = None
+    landmark_coverage: float = 0.0
 
     def to_dict(self) -> dict:
         return {
@@ -36,6 +40,9 @@ class MatchResult:
             "score": round(self.score, 2),
             "matched_view": self.matched_view,
             "matched_space": self.matched_space,
+            "method": self.method,
+            "motion_distance": round(self.motion_distance, 4) if self.motion_distance is not None else None,
+            "landmark_coverage": round(self.landmark_coverage, 3),
             "reference_angles": {k: round(v, 2) for k, v in self.reference_angles.items()},
             "deltas_deg": {k: round(v, 2) for k, v in self.deltas_deg.items()},
         }
@@ -123,13 +130,15 @@ def match_views(
     queries = []
     for item in query_views:
         angles = normalize_angle_dict(item.get("angles") or item)
-        if len(angles) < 2:
+        timeline = item.get("timeline") or item.get("samples") or []
+        if len(angles) < 2 and not timeline:
             continue
         queries.append(
             {
                 "view": str(item.get("view") or "merged"),
                 "space": _space_family(item.get("space")),
                 "angles": angles,
+                "timeline": timeline,
             }
         )
     if not queries:
@@ -148,6 +157,10 @@ def match_views(
         dists: List[float] = []
         used_views: List[str] = []
         used_spaces: List[str] = []
+        methods: List[str] = []
+        motion_dists: List[float] = []
+        coverages: List[float] = []
+        scores_for_views: List[float] = []
         best_ref: Optional[Dict[str, float]] = None
         best_query: Optional[Dict[str, float]] = None
         display_name = str(rows[0].get("display_name") or player_key)
@@ -158,22 +171,57 @@ def match_views(
             scored = []
             for ref_row in refs:
                 ref = _row_angles(ref_row)
-                if len(ref) < 2 or not _angles_ok(ref):
-                    continue
-                scored.append(
-                    (
-                        angle_distance(query["angles"], ref, weights=w),
-                        ref,
-                        str(ref_row.get("view") or "merged"),
-                        _space_family(ref_row.get("space")),
-                    )
+                ref_timeline = ref_row.get("timeline") or ref_row.get("samples") or []
+                query_timeline = query.get("timeline") or []
+                angle_dist = (
+                    angle_distance(query["angles"], ref, weights=w)
+                    if len(query["angles"]) >= 2 and len(ref) >= 2 and _angles_ok(ref)
+                    else float("inf")
                 )
+                if query_timeline and ref_timeline:
+                    seq_dist, coverage = motion_distance(query_timeline, ref_timeline)
+                    if seq_dist != float("inf"):
+                        scored.append(
+                            (
+                                motion_similarity_score(seq_dist, coverage),
+                                angle_dist,
+                                seq_dist,
+                                coverage,
+                                ref,
+                                str(ref_row.get("view") or "merged"),
+                                _space_family(ref_row.get("space")),
+                                "motion_dtw_v1",
+                            )
+                        )
+                    continue
+                if angle_dist != float("inf"):
+                    scored.append(
+                        (
+                            similarity_score(angle_dist),
+                            angle_dist,
+                            None,
+                            0.0,
+                            ref,
+                            str(ref_row.get("view") or "merged"),
+                            _space_family(ref_row.get("space")),
+                            "release_angles_v1",
+                        )
+                    )
             if not scored:
                 continue
-            dist, ref, view_name, space_name = min(scored, key=lambda item: item[0])
-            dists.append(dist)
+            motion_scored = [item for item in scored if item[7] == "motion_dtw_v1"]
+            pool = motion_scored or scored
+            view_score, dist, seq_dist, coverage, ref, view_name, space_name, method = max(
+                pool, key=lambda item: item[0]
+            )
+            dists.append(dist if dist != float("inf") else 90.0)
+            scores_for_views.append(float(view_score))
             used_views.append(view_name)
             used_spaces.append(space_name)
+            methods.append(method)
+            if seq_dist is not None:
+                motion_dists.append(float(seq_dist))
+                coverages.append(float(coverage))
             best_ref = ref
             best_query = query["angles"]
         if not dists or best_ref is None or best_query is None:
@@ -184,7 +232,7 @@ def match_views(
                 player_key=player_key,
                 display_name=display_name,
                 distance_deg=dist,
-                score=similarity_score(dist),
+                score=float(sum(scores_for_views) / len(scores_for_views)),
                 reference_angles=best_ref,
                 deltas_deg={
                     k: float(best_query.get(k, 0.0) - best_ref.get(k, 0.0))
@@ -193,10 +241,13 @@ def match_views(
                 },
                 matched_view="+".join(used_views),
                 matched_space="+".join(used_spaces),
+                method="+".join(sorted(set(methods))),
+                motion_distance=(sum(motion_dists) / len(motion_dists)) if motion_dists else None,
+                landmark_coverage=(sum(coverages) / len(coverages)) if coverages else 0.0,
             )
         )
 
-    results.sort(key=lambda m: m.distance_deg)
+    results.sort(key=lambda m: (-m.score, m.distance_deg))
     return results[: max(1, top_k)]
 
 

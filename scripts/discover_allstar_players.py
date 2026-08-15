@@ -6,6 +6,8 @@ import argparse
 import json
 import sys
 import tempfile
+import urllib.parse
+import urllib.request
 from pathlib import Path
 from typing import List, Optional
 
@@ -20,14 +22,16 @@ if str(ROOT) not in sys.path:
 from scripts.youtube_profile import (  # noqa: E402
     MODELS_JSON,
     analyze_best,
+    candidate_metadata_score,
     download_clip,
     persist_player_profile,
     release_score,
-    search_player_clip_urls,
+    search_player_clip_candidates,
     youtube_id,
 )
 
 ALLSTAR_SHOOTERS = [
+    {"display_name": "Stephen Curry", "search_name": "Stephen Curry"},
     {"display_name": "Devin Booker", "search_name": "Devin Booker"},
     {"display_name": "Kevin Durant", "search_name": "Kevin Durant"},
     {"display_name": "Donovan Mitchell", "search_name": "Donovan Mitchell"},
@@ -45,25 +49,67 @@ ALLSTAR_SHOOTERS = [
     {"display_name": "Victor Wembanyama", "search_name": "Victor Wembanyama"},
 ]
 
-TARGET_CLIPS = 5
+TARGET_CLIPS = 12
 VIEW_TAG = "side"
+CANDIDATE_CATALOG = ROOT / "models" / "youtube_candidate_catalog.json"
 
 
 def collect_clips_for_player(
+    display_name: str,
     search_name: str,
     tmp: Path,
     *,
     target: int = TARGET_CLIPS,
-    max_attempts: int = 25,
+    max_attempts: int = 60,
 ) -> List[dict]:
-    urls = search_player_clip_urls(search_name)
-    print(f"  found {len(urls)} candidate URLs")
+    candidates = []
+    if CANDIDATE_CATALOG.exists():
+        try:
+            catalog = json.loads(CANDIDATE_CATALOG.read_text(encoding="utf-8"))
+            candidates = list(catalog.get(display_name) or [])
+        except (TypeError, ValueError, json.JSONDecodeError):
+            candidates = []
+    if not candidates:
+        candidates = search_player_clip_candidates(search_name)
+    # Re-evaluate previously known URLs by their current public title.  This
+    # salvages useful form clips while still rejecting highlights and montages.
+    if MODELS_JSON.exists():
+        previous_data = json.loads(MODELS_JSON.read_text(encoding="utf-8"))
+        known_ids = {str(item.get("video_id") or youtube_id(str(item.get("youtube_url") or ""))) for item in candidates}
+        for block in ((previous_data.get(display_name) or {}).get("views") or {}).values():
+            for old_clip in (block or {}).get("clips") or []:
+                old_url = str((old_clip or {}).get("youtube_url") or "")
+                video_id = youtube_id(old_url)
+                if not old_url or video_id in known_ids:
+                    continue
+                try:
+                    endpoint = "https://www.youtube.com/oembed?url=" + urllib.parse.quote(old_url, safe="") + "&format=json"
+                    with urllib.request.urlopen(endpoint, timeout=10) as response:
+                        metadata = json.loads(response.read().decode("utf-8"))
+                    candidate = {
+                        "youtube_url": old_url,
+                        "video_id": video_id,
+                        "title": str(metadata.get("title") or ""),
+                        "duration": 0.0,
+                        "uploader": str(metadata.get("author_name") or ""),
+                        "query": "legacy source revalidated by title",
+                    }
+                    score = candidate_metadata_score(search_name, candidate)
+                    if score > 0:
+                        candidate["metadata_score"] = score
+                        candidates.append(candidate)
+                        known_ids.add(video_id)
+                except Exception:
+                    continue
+    candidates.sort(key=lambda item: (-float(item.get("metadata_score") or 0.0), str(item.get("video_id") or "")))
+    print(f"  found {len(candidates)} quality-filtered candidate URLs")
     records: List[dict] = []
     tried: set[str] = set()
 
-    for url in urls:
+    for candidate in candidates:
         if len(records) >= target:
             break
+        url = str(candidate["youtube_url"])
         vid = youtube_id(url)
         if vid in tried:
             continue
@@ -75,7 +121,7 @@ def collect_clips_for_player(
         print(f"  [{len(records)+1}/{target}] trying {url}")
         try:
             clip = download_clip(url, tmp / slug)
-            angles, meta = analyze_best(clip, view_tag=VIEW_TAG, max_frames=240)
+            angles, meta = analyze_best(clip, view_tag=VIEW_TAG, max_frames=420)
             score = release_score(angles)
             if score <= 0:
                 print(f"    low score ({score:.1f}), skip")
@@ -84,6 +130,11 @@ def collect_clips_for_player(
                 "youtube_url": url,
                 "score": score,
                 "angles": angles,
+                "title": candidate.get("title", ""),
+                "duration": candidate.get("duration", 0.0),
+                "uploader": candidate.get("uploader", ""),
+                "query": candidate.get("query", ""),
+                "metadata_score": candidate.get("metadata_score", 0.0),
                 **meta,
             }
             records.append(record)
@@ -102,7 +153,7 @@ def process_player(entry: dict, tmp: Path, *, target: int) -> Optional[dict]:
     player_key = player_key_from_name(display_name)
     print(f"\n{'='*60}\n{display_name} ({player_key})\n{'='*60}")
 
-    records = collect_clips_for_player(search_name, tmp, target=target)
+    records = collect_clips_for_player(display_name, search_name, tmp, target=target)
     if not records:
         print(f"  WARNING: no usable clips for {display_name}")
         return None

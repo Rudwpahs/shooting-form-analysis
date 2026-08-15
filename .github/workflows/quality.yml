@@ -45,5 +45,8 @@ jobs:
       - name: Run tests
         run: python -m unittest discover -s tests -p "test_*.py" -v
 
+      - name: Validate learned motion dataset
+        run: python scripts/validate_motion_dataset.py --min-clips 3
+
       - name: Verify MediaPipe model present
         run: test -f models/pose_landmarker_full.task

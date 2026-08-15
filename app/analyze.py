@@ -12,6 +12,7 @@ import numpy as np
 
 from .angles import AngleSnapshot, angles_from_landmarks, angles_plausible, median_angles
 from .multiview3d import merge_multiview_release
+from .motion import normalize_landmarks, smooth_timeline, timeline_quality as evaluate_timeline_quality
 from .pose import PoseCandidate, close_detector, create_pose_detector
 from .shot_span import (
     ShotSpan,
@@ -49,6 +50,7 @@ class ViewAnalysis:
     dip_frame_index: int = -1
     followthrough_frame_index: int = -1
     release_landmarks: List[dict] = field(default_factory=list)
+    motion_quality: Dict[str, object] = field(default_factory=dict)
     error: str = ""
 
     def to_dict(self, *, include_skeleton: bool = True) -> dict:
@@ -215,7 +217,7 @@ def list_people_in_video(
 
 
 def _timeline_from_shot(
-    sequence: List[Tuple[int, AngleSnapshot, float]],
+    sequence: List[Tuple[int, AngleSnapshot, float, List[List[float]]]],
     span: ShotSpan,
     fps: float,
 ) -> List[dict]:
@@ -227,12 +229,11 @@ def _timeline_from_shot(
     catch_frame = sequence[span.catch_index][0]
     ft_frame = sequence[span.followthrough_index][0]
     samples: List[dict] = []
-    for seq_i, (frame_idx, snap, _wrist_y) in enumerate(sequence):
+    for seq_i, (frame_idx, snap, _wrist_y, pose) in enumerate(sequence):
         if frame_idx < catch_frame or frame_idx > ft_frame:
             continue
         angles = snap.as_dict()
-        samples.append(
-            {
+        sample = {
                 "t": round((frame_idx - catch_frame) / fps, 4),
                 "frame": int(frame_idx),
                 "phase": phase_label(seq_i, span),
@@ -241,7 +242,9 @@ def _timeline_from_shot(
                 "hip": round(float(angles["hip"]), 2),
                 "knee": round(float(angles["knee"]), 2),
             }
-        )
+        if pose:
+            sample["pose"] = pose
+        samples.append(sample)
     return samples if timeline_duration_is_plausible(samples, fps=fps) else []
 
 
@@ -261,6 +264,58 @@ def release_score(angles: dict) -> float:
     return max(0.0, base - penalty)
 
 
+def _select_release_candidate(
+    candidates: Sequence[Tuple[float, int, AngleSnapshot, List[dict]]],
+    fps: float,
+) -> Tuple[float, int, AngleSnapshot, List[dict]]:
+    """Prefer an extended-arm local wrist peak after a clear upward rise.
+
+    The old implementation selected the globally highest wrist, which often
+    picked a wave, block, or post-shot follow-through.  Ball/hand separation is
+    the eventual gold standard; this temporal score is a safer pose-only
+    fallback for ordinary YouTube footage.
+    """
+    if len(candidates) < 3:
+        return min(candidates, key=lambda item: item[0])
+    wrists = np.asarray([item[0] for item in candidates], dtype=np.float64)
+    frames = [item[1] for item in candidates]
+    lo, hi = float(np.min(wrists)), float(np.max(wrists))
+    span = max(hi - lo, 1e-6)
+    pre_frames = max(3, int(round(max(fps, 1.0) * 0.9)))
+    post_frames = max(2, int(round(max(fps, 1.0) * 0.22)))
+    best = None
+    best_score = -float("inf")
+    for index, item in enumerate(candidates):
+        wrist, frame, snap, _landmarks = item
+        pose_score = release_score(snap.as_dict())
+        if pose_score <= 0:
+            continue
+        before = [
+            wrists[j]
+            for j in range(index)
+            if frames[j] >= frame - pre_frames
+        ]
+        after = [
+            wrists[j]
+            for j in range(index + 1, len(candidates))
+            if frames[j] <= frame + post_frames
+        ]
+        rise = max(before, default=wrist) - wrist
+        height = (hi - wrist) / span
+        hold = 0.0 if not after else max(0.0, 1.0 - abs(float(np.median(after)) - wrist) / 0.12)
+        temporal_local_peak = (
+            (index == 0 or wrist <= wrists[index - 1] + 0.01)
+            and (index == len(candidates) - 1 or wrist <= wrists[index + 1] + 0.01)
+        )
+        score = 4.0 * rise + 0.9 * height + 0.5 * hold + pose_score / 300.0
+        if temporal_local_peak:
+            score += 0.35
+        if score > best_score:
+            best_score = score
+            best = item
+    return best or min(candidates, key=lambda item: item[0])
+
+
 def analyze_view(
     video_path: Path,
     view: str = "side",
@@ -271,6 +326,8 @@ def analyze_view(
     render_height: int = 720,
     keep_sequence: bool = True,
     after_release_sec: float = 1.0,
+    frame_stride: int = 1,
+    start_time_sec: float = 0.0,
 ) -> ViewAnalysis:
     cap = cv2.VideoCapture(str(video_path))
     detector = None
@@ -287,10 +344,13 @@ def analyze_view(
             )
 
         fps = float(cap.get(cv2.CAP_PROP_FPS) or 30.0)
-        detector = create_pose_detector(fps=fps, num_poses=num_poses)
+        if start_time_sec > 0:
+            cap.set(cv2.CAP_PROP_POS_FRAMES, max(0, int(round(start_time_sec * fps))))
+        frame_stride = max(1, int(frame_stride))
+        detector = create_pose_detector(fps=fps / frame_stride, num_poses=num_poses)
 
         candidates: List[Tuple[float, int, AngleSnapshot, List[dict]]] = []
-        sequence: List[Tuple[int, AngleSnapshot, float]] = []
+        sequence: List[Tuple[int, AngleSnapshot, float, List[List[float]]]] = []
         frames_scanned = 0
         after_frames = max(1, int(round(max(after_release_sec, 0.6) * fps)))
         hard_cap = max_frames + after_frames
@@ -299,6 +359,10 @@ def analyze_view(
             ok, frame = cap.read()
             if not ok:
                 break
+            current_frame = frames_scanned
+            frames_scanned += 1
+            if current_frame % frame_stride:
+                continue
             frame = _resize(frame, render_height)
             rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             poses = detector.detect(rgb)
@@ -307,12 +371,13 @@ def analyze_view(
                 snap = _angles_for_pose(pose, hand)
                 if snap is not None:
                     wrist_y = _wrist_image_y(pose, snap.hand)
+                    landmark_payload = _landmarks_payload(pose.image_landmarks)
+                    normalized_pose = normalize_landmarks(landmark_payload, hand=snap.hand)
                     candidates.append(
-                        (wrist_y, frames_scanned, snap, _landmarks_payload(pose.image_landmarks))
+                        (wrist_y, current_frame, snap, landmark_payload)
                     )
                     if keep_sequence:
-                        sequence.append((frames_scanned, snap, wrist_y))
-            frames_scanned += 1
+                        sequence.append((current_frame, snap, wrist_y, normalized_pose))
             if frames_scanned >= max_frames and candidates:
                 _, rel_so_far, _, _ = min(candidates, key=lambda item: item[0])
                 if frames_scanned > rel_so_far + after_frames:
@@ -330,14 +395,14 @@ def analyze_view(
                 error="No reliable pose for the selected person.",
             )
 
-        _, release_idx, release_snap, release_lms = min(candidates, key=lambda item: item[0])
+        _, release_idx, release_snap, release_lms = _select_release_candidate(candidates, fps)
         seq_dict: Dict[str, List[float]] = {}
         if keep_sequence and sequence:
             for key in ("elbow", "shoulder", "hip", "knee"):
-                seq_dict[key] = [float(s.as_dict()[key]) for _, s, _ in sequence]
+                seq_dict[key] = [float(s.as_dict()[key]) for _, s, _, _ in sequence]
 
-        wrist_series = [w for _, _, w in sequence]
-        seq_frames = [f for f, _, _ in sequence]
+        wrist_series = [w for _, _, w, _ in sequence]
+        seq_frames = [f for f, _, _, _ in sequence]
         try:
             release_seq_i = seq_frames.index(release_idx)
         except ValueError:
@@ -353,17 +418,44 @@ def analyze_view(
             else ShotSpan(0, 0, 0, 0)
         )
         timeline = _timeline_from_shot(sequence, span, fps) if sequence else []
+        if not timeline and len(sequence) >= 8 and 1 < release_seq_i < len(sequence) - 2:
+            release_frame = seq_frames[release_seq_i]
+            catch_i = release_seq_i
+            while catch_i > 0 and seq_frames[catch_i - 1] >= release_frame - int(round(1.0 * fps)):
+                catch_i -= 1
+            follow_i = release_seq_i
+            while follow_i + 1 < len(sequence) and seq_frames[follow_i + 1] <= release_frame + int(round(0.5 * fps)):
+                follow_i += 1
+            if catch_i < release_seq_i < follow_i:
+                dip_i = max(
+                    range(catch_i, release_seq_i),
+                    key=lambda index: wrist_series[index],
+                )
+                fallback = ShotSpan(catch_i, dip_i, release_seq_i, follow_i)
+                fallback_timeline = _timeline_from_shot(sequence, fallback, fps)
+                if fallback_timeline:
+                    span = fallback
+                    timeline = fallback_timeline
+        if timeline:
+            timeline = smooth_timeline(timeline, window=5)
         catch_frame = seq_frames[span.catch_index] if seq_frames else -1
         dip_frame = seq_frames[span.dip_index] if seq_frames else -1
         ft_frame = seq_frames[span.followthrough_index] if seq_frames else -1
 
+        release_angles = release_snap.as_dict()
+        smoothed_release = next((sample for sample in timeline if sample.get("phase") == "release"), None)
+        if smoothed_release:
+            release_angles = {
+                key: float(smoothed_release[key])
+                for key in ("elbow", "shoulder", "hip", "knee")
+            }
         return ViewAnalysis(
             view=view,
             release_frame_index=release_idx,
             frames_scanned=frames_scanned,
             space=release_snap.space,
             hand=release_snap.hand,
-            release_angles=release_snap.as_dict(),
+            release_angles=release_angles,
             sequence_angles=seq_dict,
             fps=fps,
             timeline=timeline,
@@ -371,6 +463,7 @@ def analyze_view(
             dip_frame_index=dip_frame,
             followthrough_frame_index=ft_frame,
             release_landmarks=release_lms,
+            motion_quality=evaluate_timeline_quality(timeline, fps=fps) if timeline else {},
         )
     except Exception as exc:
         return ViewAnalysis(

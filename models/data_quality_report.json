@@ -1,0 +1,439 @@
+{
+  "schema_version": "motion_dataset_validation_v1",
+  "passed": true,
+  "criteria": {
+    "minimum_accepted_clips_per_player": 3,
+    "profile_version": "motion_v2",
+    "prototype_shape": "48 frames x 33 landmarks",
+    "minimum_clip_quality": 45,
+    "minimum_same_view_prototype_sources": 2,
+    "minimum_holdout_median_score": 12,
+    "minimum_candidate_pool": 100
+  },
+  "summary": {
+    "players": 16,
+    "motion_v2_players": 16,
+    "accepted_clips": 55,
+    "unique_candidate_videos": 219,
+    "unique_accepted_videos": 55,
+    "holdout_score_median": 33.02
+  },
+  "players": [
+    {
+      "display_name": "Anthony Edwards",
+      "profile_version": "motion_v2",
+      "primary_view": "side",
+      "accepted_clips": 5,
+      "candidate_clips": 8,
+      "prototype_frames": 48,
+      "prototype_source_count": 5,
+      "prototype_quality": {
+        "score": 100.0,
+        "valid": true,
+        "reason": "ok",
+        "coverage": 1.0,
+        "mean_visibility": 0.798,
+        "max_frame_gap": 1,
+        "p95_angular_speed_deg_s": 310.7,
+        "p95_pose_speed_torso_s": 5.79,
+        "duration_sec": 1.167
+      },
+      "holdout_score_median": 32.22,
+      "failures": []
+    },
+    {
+      "display_name": "De'Aaron Fox",
+      "profile_version": "motion_v2",
+      "primary_view": "side",
+      "accepted_clips": 3,
+      "candidate_clips": 11,
+      "prototype_frames": 48,
+      "prototype_source_count": 3,
+      "prototype_quality": {
+        "score": 100.0,
+        "valid": true,
+        "reason": "ok",
+        "coverage": 1.0,
+        "mean_visibility": 0.84,
+        "max_frame_gap": 1,
+        "p95_angular_speed_deg_s": 328.4,
+        "p95_pose_speed_torso_s": 3.33,
+        "duration_sec": 1.5
+      },
+      "holdout_score_median": 44.26,
+      "failures": []
+    },
+    {
+      "display_name": "Devin Booker",
+      "profile_version": "motion_v2",
+      "primary_view": "side",
+      "accepted_clips": 3,
+      "candidate_clips": 12,
+      "prototype_frames": 48,
+      "prototype_source_count": 2,
+      "prototype_quality": {
+        "score": 93.22,
+        "valid": true,
+        "reason": "ok",
+        "coverage": 1.0,
+        "mean_visibility": 0.707,
+        "max_frame_gap": 1,
+        "p95_angular_speed_deg_s": 290.6,
+        "p95_pose_speed_torso_s": 9.86,
+        "duration_sec": 1.383
+      },
+      "holdout_score_median": 25.13,
+      "failures": []
+    },
+    {
+      "display_name": "Donovan Mitchell",
+      "profile_version": "motion_v2",
+      "primary_view": "side",
+      "accepted_clips": 3,
+      "candidate_clips": 10,
+      "prototype_frames": 48,
+      "prototype_source_count": 3,
+      "prototype_quality": {
+        "score": 100.0,
+        "valid": true,
+        "reason": "ok",
+        "coverage": 1.0,
+        "mean_visibility": 0.721,
+        "max_frame_gap": 1,
+        "p95_angular_speed_deg_s": 282.0,
+        "p95_pose_speed_torso_s": 5.95,
+        "duration_sec": 1.833
+      },
+      "holdout_score_median": 32.33,
+      "failures": []
+    },
+    {
+      "display_name": "Jalen Brunson",
+      "profile_version": "motion_v2",
+      "primary_view": "side",
+      "accepted_clips": 4,
+      "candidate_clips": 8,
+      "prototype_frames": 48,
+      "prototype_source_count": 4,
+      "prototype_quality": {
+        "score": 100.0,
+        "valid": true,
+        "reason": "ok",
+        "coverage": 1.0,
+        "mean_visibility": 0.886,
+        "max_frame_gap": 1,
+        "p95_angular_speed_deg_s": 441.2,
+        "p95_pose_speed_torso_s": 3.55,
+        "duration_sec": 1.417
+      },
+      "holdout_score_median": 40.41,
+      "failures": []
+    },
+    {
+      "display_name": "Jamal Murray",
+      "profile_version": "motion_v2",
+      "primary_view": "side",
+      "accepted_clips": 3,
+      "candidate_clips": 9,
+      "prototype_frames": 48,
+      "prototype_source_count": 3,
+      "prototype_quality": {
+        "score": 100.0,
+        "valid": true,
+        "reason": "ok",
+        "coverage": 1.0,
+        "mean_visibility": 0.913,
+        "max_frame_gap": 1,
+        "p95_angular_speed_deg_s": 312.5,
+        "p95_pose_speed_torso_s": 6.62,
+        "duration_sec": 1.6
+      },
+      "holdout_score_median": 36.42,
+      "failures": []
+    },
+    {
+      "display_name": "Jaylen Brown",
+      "profile_version": "motion_v2",
+      "primary_view": "side",
+      "accepted_clips": 5,
+      "candidate_clips": 15,
+      "prototype_frames": 48,
+      "prototype_source_count": 5,
+      "prototype_quality": {
+        "score": 96.84,
+        "valid": true,
+        "reason": "ok",
+        "coverage": 1.0,
+        "mean_visibility": 0.68,
+        "max_frame_gap": 1,
+        "p95_angular_speed_deg_s": 358.8,
+        "p95_pose_speed_torso_s": 3.87,
+        "duration_sec": 1.043
+      },
+      "holdout_score_median": 31.75,
+      "failures": []
+    },
+    {
+      "display_name": "Kawhi Leonard",
+      "profile_version": "motion_v2",
+      "primary_view": "side",
+      "accepted_clips": 4,
+      "candidate_clips": 21,
+      "prototype_frames": 48,
+      "prototype_source_count": 4,
+      "prototype_quality": {
+        "score": 100.0,
+        "valid": true,
+        "reason": "ok",
+        "coverage": 1.0,
+        "mean_visibility": 0.738,
+        "max_frame_gap": 1,
+        "p95_angular_speed_deg_s": 337.0,
+        "p95_pose_speed_torso_s": 4.85,
+        "duration_sec": 1.484
+      },
+      "holdout_score_median": 41.2,
+      "failures": []
+    },
+    {
+      "display_name": "Kevin Durant",
+      "profile_version": "motion_v2",
+      "primary_view": "side",
+      "accepted_clips": 2,
+      "candidate_clips": 23,
+      "prototype_frames": 48,
+      "prototype_source_count": 2,
+      "prototype_quality": {
+        "score": 98.69,
+        "valid": true,
+        "reason": "ok",
+        "coverage": 1.0,
+        "mean_visibility": 0.75,
+        "max_frame_gap": 1,
+        "p95_angular_speed_deg_s": 575.3,
+        "p95_pose_speed_torso_s": 7.65,
+        "duration_sec": 1.55
+      },
+      "holdout_score_median": null,
+      "failures": []
+    },
+    {
+      "display_name": "LeBron James",
+      "profile_version": "motion_v2",
+      "primary_view": "side",
+      "accepted_clips": 5,
+      "candidate_clips": 29,
+      "prototype_frames": 48,
+      "prototype_source_count": 5,
+      "prototype_quality": {
+        "score": 100.0,
+        "valid": true,
+        "reason": "ok",
+        "coverage": 1.0,
+        "mean_visibility": 0.827,
+        "max_frame_gap": 1,
+        "p95_angular_speed_deg_s": 323.8,
+        "p95_pose_speed_torso_s": 3.92,
+        "duration_sec": 1.733
+      },
+      "holdout_score_median": 38.71,
+      "failures": []
+    },
+    {
+      "display_name": "Luka Dončić",
+      "profile_version": "motion_v2",
+      "primary_view": "side",
+      "accepted_clips": 3,
+      "candidate_clips": 17,
+      "prototype_frames": 48,
+      "prototype_source_count": 3,
+      "prototype_quality": {
+        "score": 93.38,
+        "valid": true,
+        "reason": "ok",
+        "coverage": 1.0,
+        "mean_visibility": 0.804,
+        "max_frame_gap": 1,
+        "p95_angular_speed_deg_s": 431.6,
+        "p95_pose_speed_torso_s": 10.31,
+        "duration_sec": 1.667
+      },
+      "holdout_score_median": 27.22,
+      "failures": []
+    },
+    {
+      "display_name": "Norman Powell",
+      "profile_version": "motion_v2",
+      "primary_view": "side",
+      "accepted_clips": 3,
+      "candidate_clips": 11,
+      "prototype_frames": 48,
+      "prototype_source_count": 3,
+      "prototype_quality": {
+        "score": 100.0,
+        "valid": true,
+        "reason": "ok",
+        "coverage": 1.0,
+        "mean_visibility": 0.872,
+        "max_frame_gap": 1,
+        "p95_angular_speed_deg_s": 467.9,
+        "p95_pose_speed_torso_s": 5.48,
+        "duration_sec": 1.368
+      },
+      "holdout_score_median": 42.52,
+      "failures": []
+    },
+    {
+      "display_name": "Shai Gilgeous-Alexander",
+      "profile_version": "motion_v2",
+      "primary_view": "side",
+      "accepted_clips": 3,
+      "candidate_clips": 8,
+      "prototype_frames": 48,
+      "prototype_source_count": 3,
+      "prototype_quality": {
+        "score": 95.71,
+        "valid": true,
+        "reason": "ok",
+        "coverage": 1.0,
+        "mean_visibility": 0.718,
+        "max_frame_gap": 1,
+        "p95_angular_speed_deg_s": 463.9,
+        "p95_pose_speed_torso_s": 9.05,
+        "duration_sec": 1.735
+      },
+      "holdout_score_median": 20.09,
+      "failures": []
+    },
+    {
+      "display_name": "Stephen Curry",
+      "profile_version": "motion_v2",
+      "primary_view": "side",
+      "accepted_clips": 5,
+      "candidate_clips": 23,
+      "prototype_frames": 48,
+      "prototype_source_count": 5,
+      "prototype_quality": {
+        "score": 99.38,
+        "valid": true,
+        "reason": "ok",
+        "coverage": 1.0,
+        "mean_visibility": 0.712,
+        "max_frame_gap": 1,
+        "p95_angular_speed_deg_s": 298.1,
+        "p95_pose_speed_torso_s": 4.93,
+        "duration_sec": 1.068
+      },
+      "holdout_score_median": 30.29,
+      "failures": []
+    },
+    {
+      "display_name": "Tyrese Maxey",
+      "profile_version": "motion_v2",
+      "primary_view": "side",
+      "accepted_clips": 2,
+      "candidate_clips": 7,
+      "prototype_frames": 48,
+      "prototype_source_count": 2,
+      "prototype_quality": {
+        "score": 88.2,
+        "valid": true,
+        "reason": "ok",
+        "coverage": 1.0,
+        "mean_visibility": 0.824,
+        "max_frame_gap": 1,
+        "p95_angular_speed_deg_s": 394.0,
+        "p95_pose_speed_torso_s": 12.9,
+        "duration_sec": 1.424
+      },
+      "holdout_score_median": null,
+      "failures": []
+    },
+    {
+      "display_name": "Victor Wembanyama",
+      "profile_version": "motion_v2",
+      "primary_view": "side",
+      "accepted_clips": 2,
+      "candidate_clips": 9,
+      "prototype_frames": 48,
+      "prototype_source_count": 2,
+      "prototype_quality": {
+        "score": 97.3,
+        "valid": true,
+        "reason": "ok",
+        "coverage": 1.0,
+        "mean_visibility": 0.686,
+        "max_frame_gap": 1,
+        "p95_angular_speed_deg_s": 258.3,
+        "p95_pose_speed_torso_s": 6.77,
+        "duration_sec": 1.188
+      },
+      "holdout_score_median": null,
+      "failures": []
+    }
+  ],
+  "closest_pairwise_profiles": [
+    {
+      "left": "Anthony Edwards",
+      "right": "Jaylen Brown",
+      "distance": 0.18248,
+      "coverage": 0.882
+    },
+    {
+      "left": "LeBron James",
+      "right": "Stephen Curry",
+      "distance": 0.18865,
+      "coverage": 0.923
+    },
+    {
+      "left": "Jalen Brunson",
+      "right": "Kevin Durant",
+      "distance": 0.18976,
+      "coverage": 0.97
+    },
+    {
+      "left": "Anthony Edwards",
+      "right": "Norman Powell",
+      "distance": 0.19299,
+      "coverage": 0.962
+    },
+    {
+      "left": "Donovan Mitchell",
+      "right": "Jaylen Brown",
+      "distance": 0.19723,
+      "coverage": 0.826
+    },
+    {
+      "left": "Jaylen Brown",
+      "right": "Stephen Curry",
+      "distance": 0.20053,
+      "coverage": 0.882
+    },
+    {
+      "left": "Kawhi Leonard",
+      "right": "Stephen Curry",
+      "distance": 0.2014,
+      "coverage": 0.954
+    },
+    {
+      "left": "Kevin Durant",
+      "right": "LeBron James",
+      "distance": 0.20511,
+      "coverage": 0.958
+    },
+    {
+      "left": "Stephen Curry",
+      "right": "Tyrese Maxey",
+      "distance": 0.20529,
+      "coverage": 0.962
+    },
+    {
+      "left": "Jalen Brunson",
+      "right": "Jaylen Brown",
+      "distance": 0.20546,
+      "coverage": 0.9
+    }
+  ],
+  "warnings": [],
+  "failures": []
+}

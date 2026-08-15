@@ -184,6 +184,18 @@ def list_player_angle_rows(conn: sqlite3.Connection) -> List[Dict[str, Any]]:
         ORDER BY p.display_name, a.view
         """
     ).fetchall()
+    timeline_rows = conn.execute(
+        "SELECT player_key, view, samples_json FROM player_timelines"
+    ).fetchall()
+    timelines: Dict[tuple, List[Dict[str, Any]]] = {}
+    for timeline_row in timeline_rows:
+        try:
+            decoded = json.loads(timeline_row["samples_json"])
+        except (TypeError, ValueError, json.JSONDecodeError):
+            decoded = []
+        if isinstance(decoded, list):
+            timelines[(str(timeline_row["player_key"]), str(timeline_row["view"]))] = decoded
+
     catalog = []
     for row in rows:
         catalog.append(
@@ -200,6 +212,7 @@ def list_player_angle_rows(conn: sqlite3.Connection) -> List[Dict[str, Any]]:
                     "hip": float(row["hip"]),
                     "knee": float(row["knee"]),
                 },
+                "timeline": timelines.get((str(row["player_key"]), str(row["view"])), []),
             }
         )
     return catalog

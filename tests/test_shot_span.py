@@ -79,6 +79,7 @@ class ShotSpanTests(unittest.TestCase):
         model_path = Path(__file__).resolve().parents[1] / "models" / "nba_player_models.json"
         players = json.loads(model_path.read_text(encoding="utf-8"))
         checked = 0
+        players_with_timeline = set()
         for name, player in players.items():
             for view_name, view in (player.get("views") or {}).items():
                 timeline = (view or {}).get("timeline") or {}
@@ -95,7 +96,9 @@ class ShotSpanTests(unittest.TestCase):
                     message,
                 )
                 checked += 1
-        self.assertEqual(checked, 16)
+                players_with_timeline.add(name)
+        self.assertGreaterEqual(checked, len(players))
+        self.assertEqual(players_with_timeline, set(players))
 
 
 if __name__ == "__main__":
