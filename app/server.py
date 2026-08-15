@@ -9,8 +9,17 @@ from pathlib import Path
 from flask import Flask, jsonify, request, send_from_directory
 
 from .analyze import VIEW_TAGS, analyze_session, list_people_in_video, release_score
-from .db import connect, ensure_seeded, list_player_angle_rows, list_player_catalog, save_session, upsert_player
+from .db import (
+    connect,
+    ensure_seeded,
+    get_player_skeleton_source,
+    list_player_angle_rows,
+    list_player_catalog,
+    save_session,
+    upsert_player,
+)
 from .similarity import match_player, match_views
+from .skeleton import build_skeleton_timeline, release_skeleton
 
 ROOT = Path(__file__).resolve().parent.parent
 STATIC = ROOT / "static"
@@ -66,6 +75,39 @@ def players():
         return jsonify({"players": list_player_catalog(conn)})
     finally:
         conn.close()
+
+
+@app.get("/api/players/<player_key>/skeleton")
+def player_skeleton(player_key: str):
+    conn = connect()
+    try:
+        profile = get_player_skeleton_source(conn, player_key)
+    finally:
+        conn.close()
+    if profile is None:
+        return jsonify({"error": "Player does not have a compatible 3D profile."}), 404
+
+    if profile["samples"]:
+        skeleton = build_skeleton_timeline(
+            profile["samples"],
+            hand=profile["hand"],
+            view=profile["view"],
+            source_space=profile["space"],
+        )
+    else:
+        skeleton = release_skeleton(
+            profile["angles"],
+            hand=profile["hand"],
+            view=profile["view"],
+            source_space=profile["space"],
+        )
+    return jsonify(
+        {
+            "player_key": profile["player_key"],
+            "display_name": profile["display_name"],
+            "skeleton": skeleton,
+        }
+    )
 
 
 @app.post("/api/people")
@@ -227,7 +269,7 @@ def analyze():
                 person_index=session.person_index,
                 hand=hand or (session.views[0].hand if session.views else None),
                 release_angles=session.release_angles_merged,
-                views=[v.to_dict() for v in session.views],
+                views=[v.to_dict(include_skeleton=False) for v in session.views],
             )
         finally:
             conn.close()

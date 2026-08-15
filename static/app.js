@@ -17,6 +17,48 @@ const JOINT_COLORS = {
   knee: "#7c3aed",
 };
 
+function createSkeletonViewer(prefix) {
+  return new window.Skeleton3D.SkeletonViewer({
+    canvas: $(`${prefix}_skeleton_canvas`),
+    playButton: $(`${prefix}_skeleton_play`),
+    slider: $(`${prefix}_skeleton_slider`),
+    timeLabel: $(`${prefix}_skeleton_time`),
+    phaseLabel: $(`${prefix}_skeleton_phase`),
+  });
+}
+
+const userSkeletonViewer = createSkeletonViewer("user");
+const playerSkeletonViewer = createSkeletonViewer("player");
+
+async function loadPlayerSkeleton(playerKey, displayName, scroll = true) {
+  const section = $("player_skeleton_section");
+  section.hidden = false;
+  $("player_skeleton_title").textContent = `${displayName} · 3D 스켈레톤`;
+  $("player_skeleton_meta").textContent = "3D 스켈레톤을 불러오는 중…";
+  try {
+    const res = await fetch(`/api/players/${encodeURIComponent(playerKey)}/skeleton`);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || "선수 스켈레톤 로드 실패");
+    playerSkeletonViewer.setProfile(data.skeleton);
+    const frames = data.skeleton?.frames?.length || 0;
+    $("player_skeleton_meta").textContent = `표준 신체 비율 · ${frames}개 3D 랜드마크 프레임 · ${String(data.skeleton?.view || "side").toUpperCase()}`;
+    if (scroll) section.scrollIntoView({ behavior: "smooth", block: "center" });
+  } catch (err) {
+    $("player_skeleton_meta").textContent = String(err.message || err);
+  }
+}
+
+function showUserSkeleton(views) {
+  const candidates = (views || []).filter((view) => view.skeleton?.frames?.length);
+  const view = candidates.find((item) => item.view === "side") || candidates[0];
+  const section = $("user_skeleton_section");
+  section.hidden = !view;
+  if (!view) return;
+  userSkeletonViewer.setProfile(view.skeleton);
+  const frames = view.skeleton.frames.length;
+  $("user_skeleton_meta").textContent = `표준 신체 비율 · ${frames}개 3D 랜드마크 프레임 · ${String(view.view || "side").toUpperCase()}`;
+}
+
 function firstVideoFile() {
   return $("video_side").files[0] || $("video_front").files[0] || $("video_oblique").files[0] || null;
 }
@@ -98,7 +140,11 @@ async function loadPlayers() {
       </div>
       <em>E ${Number(a.elbow).toFixed(1)}°</em>
       <em>S ${Number(a.shoulder).toFixed(1)}°</em>
+      <button type="button" class="btn ghost compact skeleton-open">3D 스켈레톤</button>
     `;
+    el.querySelector(".skeleton-open").addEventListener("click", () => {
+      loadPlayerSkeleton(p.player_key, p.display_name);
+    });
     root.appendChild(el);
   });
 }
@@ -202,6 +248,10 @@ function renderResult(data) {
   });
 
   renderPhases(data.analysis?.views || []);
+  showUserSkeleton(data.analysis?.views || []);
+
+  const reference = selected || top;
+  if (reference) loadPlayerSkeleton(reference.player_key, reference.display_name, false);
 
   $("result_section").scrollIntoView({ behavior: "smooth", block: "start" });
 }

@@ -288,6 +288,10 @@ select:focus {
   cursor: not-allowed;
   transform: none;
 }
+.btn.compact {
+  padding: 0.48rem 0.85rem;
+  font-size: 0.88rem;
+}
 
 .status {
   min-height: 1.35rem;
@@ -428,6 +432,76 @@ select:focus {
   font-family: var(--font-display);
 }
 
+.skeleton-profile {
+  margin-top: 1.25rem;
+  padding: 1rem;
+  border: 2px solid var(--color-line);
+  background: #f8fafc;
+}
+.skeleton-profile.player-skeleton {
+  margin: 0 0 1rem;
+}
+.skeleton-heading {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.75rem;
+}
+.skeleton-heading h3 {
+  margin: 0;
+}
+.skeleton-heading p {
+  margin: 0.2rem 0 0;
+  color: var(--color-muted);
+  font-size: 0.85rem;
+}
+.skeleton-tip {
+  flex: none;
+  padding: 0.28rem 0.55rem;
+  border: 1px solid var(--color-line);
+  background: #fff;
+  color: var(--color-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+.skeleton-canvas {
+  display: block;
+  width: 100%;
+  height: 430px;
+  border: 2px solid var(--color-ink);
+  background: #eff6ff;
+  cursor: grab;
+  touch-action: none;
+}
+.skeleton-canvas.is-dragging {
+  cursor: grabbing;
+}
+.skeleton-controls {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  gap: 0.75rem;
+  align-items: center;
+  margin-top: 0.7rem;
+}
+.skeleton-controls input[type="range"] {
+  width: 100%;
+  accent-color: var(--color-primary);
+}
+.skeleton-controls b {
+  min-width: 4.5rem;
+  color: var(--color-primary-deep);
+  font-family: var(--font-display);
+  text-align: center;
+}
+.skeleton-controls span {
+  min-width: 6.8rem;
+  color: var(--color-muted);
+  font-size: 0.82rem;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
 .phase-lead {
   margin: -0.35rem 0 0.85rem;
   color: var(--color-muted);
@@ -528,7 +602,7 @@ select:focus {
 .match-list { display: grid; gap: 0.55rem; }
 .match {
   display: grid;
-  grid-template-columns: 1fr auto auto;
+  grid-template-columns: 1fr auto auto auto;
   gap: 0.75rem;
   align-items: center;
   padding: 0.85rem 1rem;
@@ -583,6 +657,12 @@ pre {
   .steps { grid-template-columns: 1fr; }
   .phase-bar { grid-template-columns: 1fr 1fr; }
   .match { grid-template-columns: 1fr; }
+  .skeleton-heading { display: grid; }
+  .skeleton-tip { justify-self: start; }
+  .skeleton-canvas { height: 360px; }
+  .skeleton-controls { grid-template-columns: auto 1fr; }
+  .skeleton-controls b,
+  .skeleton-controls span { text-align: left; }
   main { padding-top: 1.5rem; }
 }
 

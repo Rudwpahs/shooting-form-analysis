@@ -128,6 +128,23 @@
       <h3>릴리스 각도</h3>
       <div class="metrics" id="metrics"></div>
 
+      <div class="skeleton-profile" id="user_skeleton_section" hidden>
+        <div class="skeleton-heading">
+          <div>
+            <h3>내 3D 슛폼 스켈레톤</h3>
+            <p id="user_skeleton_meta">표준 신체 비율 · 각도 기반 3D 랜드마크</p>
+          </div>
+          <span class="skeleton-tip">드래그 회전 · 휠 확대</span>
+        </div>
+        <canvas id="user_skeleton_canvas" class="skeleton-canvas" aria-label="내 슛폼 3D 스켈레톤"></canvas>
+        <div class="skeleton-controls">
+          <button type="button" class="btn ghost compact" id="user_skeleton_play">재생</button>
+          <input type="range" id="user_skeleton_slider" min="0" max="1000" value="0" aria-label="내 슛폼 타임라인" />
+          <b id="user_skeleton_phase">—</b>
+          <span id="user_skeleton_time">0.00 / 0.00s</span>
+        </div>
+      </div>
+
       <h3>슈팅 구간</h3>
       <p class="phase-lead">캐치 → 딥 → 라이즈 → 릴리즈 → 팔로우스루. 매 프레임 각도가 들어 있습니다.</p>
       <div id="phase_views"></div>
@@ -148,12 +165,29 @@
     <section class="block">
       <div class="block-head">
         <h2>선수 3D 각도 프로필</h2>
-        <p>실제 매칭에 사용하는 선수 목록 · 비공식 자체 측정</p>
+        <p>선수별 스켈레톤을 회전하고 슈팅 타임라인을 재생할 수 있습니다.</p>
+      </div>
+      <div class="skeleton-profile player-skeleton" id="player_skeleton_section" hidden>
+        <div class="skeleton-heading">
+          <div>
+            <h3 id="player_skeleton_title">선수 3D 스켈레톤</h3>
+            <p id="player_skeleton_meta">표준 신체 비율 · 각도 기반 3D 랜드마크</p>
+          </div>
+          <span class="skeleton-tip">드래그 회전 · 휠 확대</span>
+        </div>
+        <canvas id="player_skeleton_canvas" class="skeleton-canvas" aria-label="선수 슛폼 3D 스켈레톤"></canvas>
+        <div class="skeleton-controls">
+          <button type="button" class="btn ghost compact" id="player_skeleton_play">재생</button>
+          <input type="range" id="player_skeleton_slider" min="0" max="1000" value="0" aria-label="선수 슛폼 타임라인" />
+          <b id="player_skeleton_phase">—</b>
+          <span id="player_skeleton_time">0.00 / 0.00s</span>
+        </div>
       </div>
       <div id="players" class="match-list"></div>
     </section>
   </main>
 
+  <script src="/static/skeleton3d.js"></script>
   <script src="/static/app.js"></script>
 </body>
 </html>

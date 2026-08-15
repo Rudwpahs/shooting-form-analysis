@@ -12,6 +12,8 @@ Experimental coaching aid — not a biomechanical or medical assessment.
 2. Select the person in the clip
 3. Lift pose to 3D and store **joint angles only** (no height / limb length)
 4. Match against player angle profiles in DB
+5. Reconstruct player and user angles on the same general-adult skeleton
+6. Rotate, zoom, scrub, and play catch-to-follow-through 3D landmark timelines
 
 ## Run locally
 
@@ -48,5 +50,6 @@ Render Free services sleep after inactivity and can take about a minute to start
 
 - Release candidate ≈ frame where the shooting-side wrist is highest in the image.
 - Camera angle, framing, and occlusion affect results.
+- Skeletons use fixed ordinary-adult proportions; they visualize angle motion and do not reproduce an athlete's actual body dimensions.
 - Seeded player profiles are unofficial self-measured angle samples, not affiliated with any league/athlete.
 - Legacy Streamlit (`web_app.py`) / Next site (`website/`) are not used for deploy.

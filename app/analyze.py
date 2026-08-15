@@ -21,6 +21,7 @@ from .shot_span import (
     summarize_phases,
     timeline_duration_is_plausible,
 )
+from .skeleton import build_skeleton_timeline, release_skeleton
 
 
 VIEW_TAGS = ("front", "side", "oblique")
@@ -50,7 +51,7 @@ class ViewAnalysis:
     release_landmarks: List[dict] = field(default_factory=list)
     error: str = ""
 
-    def to_dict(self) -> dict:
+    def to_dict(self, *, include_skeleton: bool = True) -> dict:
         data = asdict(self)
         data.pop("sequence_angles", None)
         # Landmarks are large; keep only a flag in API payloads.
@@ -63,6 +64,21 @@ class ViewAnalysis:
             "follow_through": self.followthrough_frame_index,
         }
         data["phase_summary"] = summarize_phases(self.timeline)
+        if include_skeleton:
+            if self.timeline:
+                data["skeleton"] = build_skeleton_timeline(
+                    self.timeline,
+                    hand=self.hand or "right",
+                    view=self.view,
+                    source_space=self.space or "3d",
+                )
+            elif self.release_angles:
+                data["skeleton"] = release_skeleton(
+                    self.release_angles,
+                    hand=self.hand or "right",
+                    view=self.view,
+                    source_space=self.space or "3d",
+                )
         return data
 
 
