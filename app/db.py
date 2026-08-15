@@ -205,6 +205,66 @@ def list_player_angle_rows(conn: sqlite3.Connection) -> List[Dict[str, Any]]:
     return catalog
 
 
+def get_player_skeleton_source(conn: sqlite3.Connection, player_key: str) -> Optional[Dict[str, Any]]:
+    """Return one player's preferred 3D angles and motion timeline."""
+    profile = conn.execute(
+        """
+        SELECT p.player_key, p.display_name, p.hand, p.source,
+               a.elbow, a.shoulder, a.hip, a.knee, a.space, a.view
+        FROM players p
+        JOIN player_angles a ON a.player_key = p.player_key
+        WHERE p.player_key = ? AND a.space = '3d' AND p.source != 'archetype'
+        ORDER BY CASE WHEN a.view = 'merged' THEN 0 WHEN a.view = 'side' THEN 1 ELSE 2 END,
+                 a.view
+        LIMIT 1
+        """,
+        (player_key,),
+    ).fetchone()
+    if profile is None:
+        return None
+
+    timeline = conn.execute(
+        """
+        SELECT view, fps, t0, after_sec, samples_json, youtube_url
+        FROM player_timelines
+        WHERE player_key = ?
+        ORDER BY CASE WHEN view = 'side' THEN 0 WHEN view = 'merged' THEN 1 ELSE 2 END,
+                 view
+        LIMIT 1
+        """,
+        (player_key,),
+    ).fetchone()
+    samples: List[Dict[str, Any]] = []
+    timeline_view = str(profile["view"])
+    fps = 30.0
+    if timeline is not None:
+        try:
+            decoded = json.loads(timeline["samples_json"])
+            if isinstance(decoded, list):
+                samples = decoded
+        except (TypeError, ValueError, json.JSONDecodeError):
+            samples = []
+        timeline_view = str(timeline["view"])
+        fps = float(timeline["fps"] or 30.0)
+
+    return {
+        "player_key": str(profile["player_key"]),
+        "display_name": str(profile["display_name"]),
+        "hand": str(profile["hand"] or "right"),
+        "source": str(profile["source"] or ""),
+        "space": str(profile["space"] or "3d"),
+        "view": timeline_view,
+        "fps": fps,
+        "angles": {
+            "elbow": float(profile["elbow"]),
+            "shoulder": float(profile["shoulder"]),
+            "hip": float(profile["hip"]),
+            "knee": float(profile["knee"]),
+        },
+        "samples": samples,
+    }
+
+
 def save_session(
     conn: sqlite3.Connection,
     *,
