@@ -62,9 +62,15 @@
             <option value="left">left</option>
           </select>
         </label>
+        <label class="field player-target">비교할 선수 (선택)
+          <select id="target_player">
+            <option value="">선택 안 함 · 가장 유사한 선수 자동 검색</option>
+          </select>
+        </label>
         <button type="button" class="btn ghost" id="btn_people">사람 찾기</button>
         <button type="button" class="btn primary" id="btn_analyze" disabled>3D 각도 분석</button>
       </div>
+      <p class="selection-help">선수를 고르면 선택 선수와의 유사도와 실제 최유사 선수를 함께 보여줍니다.</p>
       <p id="status" class="status" role="status"></p>
       <div class="progress" id="progress" hidden>
         <div class="progress-track"><i id="progress_bar"></i></div>
@@ -88,7 +94,7 @@
 
       <div class="scoreboard">
         <div class="score-tile">
-          <span>TOP MATCH</span>
+          <span>가장 유사한 선수</span>
           <strong id="top_name">—</strong>
         </div>
         <div class="score-tile accent">
@@ -101,6 +107,24 @@
         </div>
       </div>
 
+      <div class="selected-compare" id="selected_compare" hidden>
+        <h3>선택 선수 비교</h3>
+        <div class="scoreboard">
+          <div class="score-tile">
+            <span>선택한 선수</span>
+            <strong id="selected_name">—</strong>
+          </div>
+          <div class="score-tile accent">
+            <span>유사도</span>
+            <strong id="selected_score">—</strong>
+          </div>
+          <div class="score-tile">
+            <span>각도 RMSE</span>
+            <strong id="selected_dist">—</strong>
+          </div>
+        </div>
+      </div>
+
       <h3>릴리스 각도</h3>
       <div class="metrics" id="metrics"></div>
 
@@ -108,10 +132,10 @@
       <p class="phase-lead">캐치 → 딥 → 라이즈 → 릴리즈 → 팔로우스루. 매 프레임 각도가 들어 있습니다.</p>
       <div id="phase_views"></div>
 
-      <h3>코칭 포인트</h3>
+      <h3 id="feedback_title">코칭 포인트</h3>
       <ul id="feedback" class="feedback"></ul>
 
-      <h3>전체 매칭</h3>
+      <h3>유사 선수 순위</h3>
       <div id="matches" class="match-list"></div>
 
       <p class="disclaimer" id="disclaimer"></p>
@@ -123,8 +147,8 @@
 
     <section class="block">
       <div class="block-head">
-        <h2>DB 각도 프로필</h2>
-        <p>비공식 자체 측정 · 리그/선수 비제휴</p>
+        <h2>선수 3D 각도 프로필</h2>
+        <p>실제 매칭에 사용하는 선수 목록 · 비공식 자체 측정</p>
       </div>
       <div id="players" class="match-list"></div>
     </section>

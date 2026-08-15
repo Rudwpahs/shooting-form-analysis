@@ -146,7 +146,7 @@ def list_player_catalog(conn: sqlite3.Connection, view: str = "merged") -> List[
                a.elbow, a.shoulder, a.hip, a.knee, a.space, a.view
         FROM players p
         JOIN player_angles a ON a.player_key = p.player_key
-        WHERE a.view = ?
+        WHERE a.view = ? AND a.space = '3d' AND p.source != 'archetype'
         ORDER BY p.display_name
         """,
         (view,),
@@ -180,6 +180,7 @@ def list_player_angle_rows(conn: sqlite3.Connection) -> List[Dict[str, Any]]:
                a.elbow, a.shoulder, a.hip, a.knee, a.space, a.view
         FROM players p
         JOIN player_angles a ON a.player_key = p.player_key
+        WHERE a.space = '3d' AND p.source != 'archetype'
         ORDER BY p.display_name, a.view
         """
     ).fetchall()

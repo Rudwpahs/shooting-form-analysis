@@ -13,7 +13,14 @@ import numpy as np
 from .angles import AngleSnapshot, angles_from_landmarks, angles_plausible, median_angles
 from .multiview3d import merge_multiview_release
 from .pose import PoseCandidate, close_detector, create_pose_detector
-from .shot_span import ShotSpan, detect_shot_span, phase_label, summarize_phases
+from .shot_span import (
+    ShotSpan,
+    detect_shot_span,
+    phase_label,
+    shot_span_is_complete,
+    summarize_phases,
+    timeline_duration_is_plausible,
+)
 
 
 VIEW_TAGS = ("front", "side", "oblique")
@@ -199,6 +206,8 @@ def _timeline_from_shot(
     """Angle samples from catch through follow-through. t=0 at catch."""
     if fps <= 0:
         fps = 30.0
+    if not shot_span_is_complete(span):
+        return []
     catch_frame = sequence[span.catch_index][0]
     ft_frame = sequence[span.followthrough_index][0]
     samples: List[dict] = []
@@ -217,7 +226,7 @@ def _timeline_from_shot(
                 "knee": round(float(angles["knee"]), 2),
             }
         )
-    return samples
+    return samples if timeline_duration_is_plausible(samples, fps=fps) else []
 
 
 def release_score(angles: dict) -> float:
@@ -317,7 +326,16 @@ def analyze_view(
             release_seq_i = seq_frames.index(release_idx)
         except ValueError:
             release_seq_i = min(range(len(seq_frames)), key=lambda i: abs(seq_frames[i] - release_idx)) if seq_frames else 0
-        span = detect_shot_span(wrist_series, fps, release_index=release_seq_i) if wrist_series else ShotSpan(0, 0, 0, 0)
+        span = (
+            detect_shot_span(
+                wrist_series,
+                fps,
+                release_index=release_seq_i,
+                frame_indices=seq_frames,
+            )
+            if wrist_series
+            else ShotSpan(0, 0, 0, 0)
+        )
         timeline = _timeline_from_shot(sequence, span, fps) if sequence else []
         catch_frame = seq_frames[span.catch_index] if seq_frames else -1
         dip_frame = seq_frames[span.dip_index] if seq_frames else -1

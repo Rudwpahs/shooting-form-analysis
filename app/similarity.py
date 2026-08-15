@@ -26,6 +26,7 @@ class MatchResult:
     reference_angles: Dict[str, float]
     deltas_deg: Dict[str, float]
     matched_view: str = "merged"
+    matched_space: str = "3d"
 
     def to_dict(self) -> dict:
         return {
@@ -34,6 +35,7 @@ class MatchResult:
             "distance_deg": round(self.distance_deg, 3),
             "score": round(self.score, 2),
             "matched_view": self.matched_view,
+            "matched_space": self.matched_space,
             "reference_angles": {k: round(v, 2) for k, v in self.reference_angles.items()},
             "deltas_deg": {k: round(v, 2) for k, v in self.deltas_deg.items()},
         }
@@ -57,18 +59,35 @@ def _angles_ok(angles: Mapping[str, float]) -> bool:
     return angles_plausible(snap)
 
 
-def _pick_refs(player_rows: Sequence[Mapping], query_view: str) -> List[Mapping]:
+def _space_family(space: object) -> str:
+    value = str(space or "3d").lower()
+    if value.startswith("3d"):
+        return "3d"
+    if value.startswith("2d"):
+        return "2d"
+    return value
+
+
+def _pick_refs(player_rows: Sequence[Mapping], query_view: str, query_space: str) -> List[Mapping]:
     """Use the same camera view when it exists, and always include clip samples.
 
     If the player has no matching camera view, use every stored sample
     (merged + clips + other views) so a single clip can still match.
     """
     query_view = str(query_view or "merged")
-    same = [r for r in player_rows if str(r.get("view") or "") == query_view]
-    clips = [r for r in player_rows if str(r.get("view") or "").startswith("clip:")]
+    query_space = _space_family(query_space)
+    compatible = [
+        row
+        for row in player_rows
+        if _space_family(row.get("space")) == query_space
+    ]
+    if not compatible:
+        return []
+    same = [r for r in compatible if str(r.get("view") or "") == query_view]
+    clips = [r for r in compatible if str(r.get("view") or "").startswith("clip:")]
     if same:
         return same + [c for c in clips if c not in same]
-    return list(player_rows)
+    return compatible
 
 
 def match_angles(
@@ -78,10 +97,11 @@ def match_angles(
     top_k: int = 5,
     weights: Optional[Mapping[str, float]] = None,
     query_view: str = "merged",
+    query_space: str = "3d",
 ) -> List[MatchResult]:
     """catalog items: {player_key, display_name, angles, view?} — degrees only."""
     return match_views(
-        [{"view": query_view, "angles": query}],
+        [{"view": query_view, "space": query_space, "angles": query}],
         catalog,
         top_k=top_k,
         weights=weights,
@@ -105,7 +125,13 @@ def match_views(
         angles = normalize_angle_dict(item.get("angles") or item)
         if len(angles) < 2:
             continue
-        queries.append({"view": str(item.get("view") or "merged"), "angles": angles})
+        queries.append(
+            {
+                "view": str(item.get("view") or "merged"),
+                "space": _space_family(item.get("space")),
+                "angles": angles,
+            }
+        )
     if not queries:
         return []
 
@@ -121,11 +147,12 @@ def match_views(
     for player_key, rows in grouped.items():
         dists: List[float] = []
         used_views: List[str] = []
+        used_spaces: List[str] = []
         best_ref: Optional[Dict[str, float]] = None
         best_query: Optional[Dict[str, float]] = None
         display_name = str(rows[0].get("display_name") or player_key)
         for query in queries:
-            refs = _pick_refs(rows, query["view"])
+            refs = _pick_refs(rows, query["view"], query["space"])
             if not refs:
                 continue
             scored = []
@@ -138,13 +165,15 @@ def match_views(
                         angle_distance(query["angles"], ref, weights=w),
                         ref,
                         str(ref_row.get("view") or "merged"),
+                        _space_family(ref_row.get("space")),
                     )
                 )
             if not scored:
                 continue
-            dist, ref, view_name = min(scored, key=lambda item: item[0])
+            dist, ref, view_name, space_name = min(scored, key=lambda item: item[0])
             dists.append(dist)
             used_views.append(view_name)
+            used_spaces.append(space_name)
             best_ref = ref
             best_query = query["angles"]
         if not dists or best_ref is None or best_query is None:
@@ -163,8 +192,26 @@ def match_views(
                     if k in best_query and k in best_ref
                 },
                 matched_view="+".join(used_views),
+                matched_space="+".join(used_spaces),
             )
         )
 
     results.sort(key=lambda m: m.distance_deg)
     return results[: max(1, top_k)]
+
+
+def match_player(
+    query_views: Sequence[Mapping],
+    catalog: Sequence[Mapping],
+    player_key: str,
+    *,
+    weights: Optional[Mapping[str, float]] = None,
+) -> Optional[MatchResult]:
+    """Return a comparison for one explicitly selected player."""
+    selected_rows = [
+        row
+        for row in catalog
+        if str(row.get("player_key") or row.get("key") or "") == str(player_key)
+    ]
+    results = match_views(query_views, selected_rows, top_k=1, weights=weights)
+    return results[0] if results else None

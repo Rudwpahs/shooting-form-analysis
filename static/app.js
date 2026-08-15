@@ -79,15 +79,22 @@ async function loadPlayers() {
   const res = await fetch("/api/players");
   const data = await res.json();
   const root = $("players");
+  const selector = $("target_player");
   root.innerHTML = "";
+  selector.length = 1;
   (data.players || []).forEach((p) => {
+    const option = document.createElement("option");
+    option.value = p.player_key;
+    option.textContent = p.display_name;
+    selector.appendChild(option);
+
     const a = p.angles || {};
     const el = document.createElement("div");
     el.className = "match";
     el.innerHTML = `
       <div>
         <strong>${p.display_name}</strong>
-        <div><em>${p.source || ""} · ${p.space || ""}</em></div>
+        <div><em>3D 관절각 프로필</em></div>
       </div>
       <em>E ${Number(a.elbow).toFixed(1)}°</em>
       <em>S ${Number(a.shoulder).toFixed(1)}°</em>
@@ -157,10 +164,21 @@ function renderResult(data) {
     metrics.appendChild(el);
   });
 
-  const top = (data.matches || [])[0];
+  const top = data.closest_match || (data.matches || [])[0];
   $("top_name").textContent = top ? top.display_name : "—";
   $("top_score").textContent = top ? top.score.toFixed(1) : "—";
   $("top_dist").textContent = top ? `${top.distance_deg.toFixed(1)}°` : "—";
+
+  const selected = data.selected_match;
+  $("selected_compare").hidden = !selected;
+  if (selected) {
+    $("selected_name").textContent = selected.display_name;
+    $("selected_score").textContent = selected.score.toFixed(1);
+    $("selected_dist").textContent = `${selected.distance_deg.toFixed(1)}°`;
+  }
+  $("feedback_title").textContent = selected
+    ? `코칭 포인트 · ${selected.display_name} 기준`
+    : "코칭 포인트 · 최유사 선수 기준";
 
   const fb = $("feedback");
   fb.innerHTML = "";
@@ -176,7 +194,7 @@ function renderResult(data) {
     const el = document.createElement("div");
     el.className = "match";
     el.innerHTML = `
-      <div><strong>${m.display_name}</strong><div><em>${m.player_key}${m.matched_view ? " · " + m.matched_view : ""}</em></div></div>
+      <div><strong>${m.display_name}</strong><div><em>3D${m.matched_view ? " · " + m.matched_view : ""}</em></div></div>
       <em>${m.score.toFixed(1)} pts</em>
       <em>Δ ${m.distance_deg.toFixed(1)}°</em>
     `;
@@ -290,6 +308,8 @@ $("btn_analyze").addEventListener("click", async () => {
   fd.append("lang", "ko");
   const hand = $("hand").value;
   if (hand) fd.append("hand", hand);
+  const targetPlayer = $("target_player").value;
+  if (targetPlayer) fd.append("target_player_key", targetPlayer);
 
   setBusy(true, "3D 각도 분석 중… (1~2분 걸릴 수 있습니다)");
   try {
@@ -297,7 +317,9 @@ $("btn_analyze").addEventListener("click", async () => {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "분석 실패");
     renderResult(data);
-    $("status").textContent = "완료 — 각도(°)만으로 매칭했습니다.";
+    $("status").textContent = targetPlayer
+      ? "완료 — 선택 선수 비교와 최유사 선수를 함께 찾았습니다."
+      : "완료 — 가장 유사한 선수를 찾았습니다.";
   } catch (err) {
     $("status").textContent = String(err.message || err);
   } finally {
