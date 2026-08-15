@@ -6,6 +6,12 @@ from dataclasses import dataclass
 from typing import List, Optional, Sequence
 
 
+MAX_CATCH_TO_RELEASE_SEC = 1.5
+MAX_FOLLOWTHROUGH_SEC = 0.55
+MIN_TIMELINE_DURATION_SEC = 0.40
+MAX_TIMELINE_DURATION_SEC = MAX_CATCH_TO_RELEASE_SEC + MAX_FOLLOWTHROUGH_SEC
+
+
 @dataclass(frozen=True)
 class ShotSpan:
     catch_index: int
@@ -31,6 +37,7 @@ def detect_shot_span(
     wrist_y: Sequence[float],
     fps: float,
     release_index: Optional[int] = None,
+    frame_indices: Optional[Sequence[int]] = None,
 ) -> ShotSpan:
     """wrist_y is image-normalized (smaller = higher in the frame).
 
@@ -42,6 +49,14 @@ def detect_shot_span(
     if n == 0:
         return ShotSpan(0, 0, 0, 0)
     fps = fps if fps > 1 else 30.0
+    if frame_indices is None:
+        frames = list(range(n))
+    else:
+        if len(frame_indices) != n:
+            raise ValueError("frame_indices must have the same length as wrist_y")
+        frames = [int(frame) for frame in frame_indices]
+        if any(right < left for left, right in zip(frames, frames[1:])):
+            raise ValueError("frame_indices must be in nondecreasing order")
     y = _smooth(wrist_y)
 
     if release_index is None:
@@ -49,12 +64,17 @@ def detect_shot_span(
     else:
         release_i = max(0, min(n - 1, int(release_index)))
 
-    pre = max(1, int(round(1.5 * fps)))
-    start = max(0, release_i - pre)
+    release_frame = frames[release_i]
+    pre = max(1, int(round(MAX_CATCH_TO_RELEASE_SEC * fps)))
+    start = release_i
+    while start > 0 and frames[start - 1] >= release_frame - pre:
+        start -= 1
     dip_i = start + max(range(release_i - start + 1), key=lambda k: y[start + k])
 
     catch_pre = max(1, int(round(1.0 * fps)))
-    c0 = max(0, dip_i - catch_pre)
+    c0 = dip_i
+    while c0 > start and frames[c0 - 1] >= frames[dip_i] - catch_pre:
+        c0 -= 1
     dip_y = y[dip_i]
     catch_i = c0
     found_hold = False
@@ -68,18 +88,26 @@ def detect_shot_span(
             found_hold = True
             break
     if not found_hold:
+        lookahead_frames = max(1, int(round(0.12 * fps)))
         for i in range(c0, dip_i):
-            if y[min(i + 3, dip_i)] - y[i] >= 0.02:
+            j = i
+            while j + 1 <= dip_i and frames[j + 1] <= frames[i] + lookahead_frames:
+                j += 1
+            if j > i and y[j] - y[i] >= 0.02:
                 catch_i = i
                 break
 
     rise = max(0.0, dip_y - y[release_i])
     drop_thresh = y[release_i] + max(0.035, 0.32 * rise)
     min_ft = max(1, int(round(0.22 * fps)))
-    max_ft = max(min_ft, int(round(0.55 * fps)))
-    ft_i = min(n - 1, release_i + max_ft)
-    for i in range(release_i + min_ft, min(n, release_i + max_ft + 1)):
-        if y[i] >= drop_thresh:
+    max_ft = max(min_ft, int(round(MAX_FOLLOWTHROUGH_SEC * fps)))
+    ft_i = release_i
+    for i in range(release_i + 1, n):
+        elapsed = frames[i] - release_frame
+        if elapsed > max_ft:
+            break
+        ft_i = i
+        if elapsed >= min_ft and y[i] >= drop_thresh:
             ft_i = i
             break
 
@@ -90,6 +118,26 @@ def detect_shot_span(
     if ft_i < release_i:
         ft_i = release_i
     return ShotSpan(catch_i, dip_i, release_i, ft_i)
+
+
+def timeline_duration_is_plausible(samples: Sequence[dict], fps: float = 30.0) -> bool:
+    """Reject incomplete or frame-gap-inflated catch-to-follow-through timelines."""
+    if len(samples) < 2:
+        return False
+    try:
+        duration = float(samples[-1]["t"]) - float(samples[0]["t"])
+    except (KeyError, TypeError, ValueError):
+        return False
+    frame_tolerance = 2.0 / max(float(fps), 1.0)
+    return MIN_TIMELINE_DURATION_SEC <= duration <= MAX_TIMELINE_DURATION_SEC + frame_tolerance
+
+
+def shot_span_is_complete(span: ShotSpan) -> bool:
+    """A stored timeline must contain motion on both sides of release."""
+    return (
+        span.catch_index <= span.dip_index < span.release_index
+        and span.catch_index < span.release_index < span.followthrough_index
+    )
 
 
 PHASE_ORDER = ("catch", "dip", "rise", "release", "follow_through")

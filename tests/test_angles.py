@@ -14,7 +14,7 @@ from app.angles import (
     normalize_angle_dict,
     similarity_score,
 )
-from app.similarity import match_angles
+from app.similarity import match_angles, match_player, match_views
 
 
 class AngleTests(unittest.TestCase):
@@ -107,6 +107,58 @@ class AngleTests(unittest.TestCase):
         good = AngleSnapshot(elbow=150, shoulder=140, hip=160, knee=150, hand="right", space="3d")
         self.assertFalse(angles_plausible(bad))
         self.assertTrue(angles_plausible(good))
+
+    def test_3d_query_does_not_match_2d_profile(self):
+        query = {"elbow": 170, "shoulder": 145, "hip": 168, "knee": 165}
+        catalog = [
+            {"player_key": "two_d", "display_name": "2D", "space": "2d", "view": "side", "angles": query},
+            {
+                "player_key": "three_d",
+                "display_name": "3D",
+                "space": "3d",
+                "view": "side",
+                "angles": {"elbow": 168, "shoulder": 143, "hip": 166, "knee": 163},
+            },
+        ]
+        matches = match_views([{"view": "side", "space": "3d", "angles": query}], catalog)
+        self.assertEqual([match.player_key for match in matches], ["three_d"])
+        self.assertEqual(matches[0].matched_space, "3d")
+
+    def test_multiview_3d_query_matches_3d_profile(self):
+        query = {"elbow": 170, "shoulder": 145, "hip": 168, "knee": 165}
+        catalog = [
+            {
+                "player_key": "three_d",
+                "display_name": "3D",
+                "space": "3d",
+                "view": "merged",
+                "angles": query,
+            }
+        ]
+        matches = match_views([{"view": "merged", "space": "3d_mv", "angles": query}], catalog)
+        self.assertEqual([match.player_key for match in matches], ["three_d"])
+        self.assertEqual(matches[0].matched_space, "3d")
+
+    def test_selected_player_is_compared_even_when_not_closest(self):
+        query = {"elbow": 170, "shoulder": 145, "hip": 168, "knee": 165}
+        catalog = [
+            {"player_key": "near", "display_name": "Near", "space": "3d", "view": "side", "angles": query},
+            {
+                "player_key": "chosen",
+                "display_name": "Chosen",
+                "space": "3d",
+                "view": "side",
+                "angles": {"elbow": 150, "shoulder": 125, "hip": 150, "knee": 145},
+            },
+        ]
+        selected = match_player(
+            [{"view": "side", "space": "3d", "angles": query}],
+            catalog,
+            "chosen",
+        )
+        self.assertIsNotNone(selected)
+        self.assertEqual(selected.player_key, "chosen")
+        self.assertLess(selected.score, 100)
 
 
 if __name__ == "__main__":

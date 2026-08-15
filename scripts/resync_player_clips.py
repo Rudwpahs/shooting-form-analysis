@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 import sys
 import tempfile
 from pathlib import Path
@@ -12,12 +11,13 @@ if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
 from app.analyze import analyze_view, pick_best_person, release_score  # noqa: E402
-from app.db import connect, ensure_seeded, upsert_player  # noqa: E402
+from app.db import connect, ensure_seeded, upsert_player, upsert_timeline  # noqa: E402
 from scripts.youtube_profile import (  # noqa: E402
     MODELS_JSON,
     download_clip,
     load_json,
     player_key_from_name,
+    save_json,
     youtube_id,
 )
 
@@ -114,9 +114,25 @@ def main() -> None:
                     "hand": result.hand,
                     "view": "side",
                 }
+                timeline = {
+                    "t0": "catch",
+                    "fps": round(float(result.fps), 3),
+                    "phases": {
+                        "catch": result.catch_frame_index,
+                        "dip": result.dip_frame_index,
+                        "release": result.release_frame_index,
+                        "follow_through": result.followthrough_frame_index,
+                    },
+                    "youtube_url": url,
+                    "person_index": person,
+                    "samples": result.timeline,
+                }
+                duration = float(result.timeline[-1]["t"]) if result.timeline else None
+                duration_text = f"{duration:.2f}s" if duration is not None else "rejected"
                 print(
                     f"    ok person={person} frame={result.release_frame_index} "
-                    f"score={score:.1f} e={angles['elbow']:.1f} s={angles['shoulder']:.1f}"
+                    f"score={score:.1f} e={angles['elbow']:.1f} s={angles['shoulder']:.1f} "
+                    f"timeline={duration_text}"
                 )
                 break
             if meta is None:
@@ -138,12 +154,15 @@ def main() -> None:
             block["angles"] = dict(best["angles"])
             block["space"] = best.get("space") or "3d"
             block["method"] = "best clip (resync current analyzer)"
-            views["side"] = {
+            side_view = {
                 "angles": dict(best["angles"]),
                 "space": best.get("space") or "3d",
                 "source": "youtube_self_measured",
                 "clips": [best],
             }
+            if timeline["samples"]:
+                side_view["timeline"] = timeline
+            views["side"] = side_view
             entry["metrics"] = {
                 "Elbow angle": best["angles"]["elbow"],
                 "Shoulder angle": best["angles"]["shoulder"],
@@ -173,10 +192,21 @@ def main() -> None:
                         source="youtube_self_measured",
                         space=best.get("space") or "3d",
                     )
+                if timeline["samples"]:
+                    upsert_timeline(
+                        conn,
+                        key,
+                        "side",
+                        float(timeline["fps"]),
+                        timeline["samples"],
+                        t0="catch",
+                        after_sec=float(timeline["samples"][-1]["t"]),
+                        youtube_url=url,
+                    )
             finally:
                 conn.close()
 
-    MODELS_JSON.write_text(json.dumps(data, indent=2), encoding="utf-8")
+    save_json(data)
     ensure_seeded()
     print(f"\nSaved {MODELS_JSON}")
 

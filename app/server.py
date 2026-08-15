@@ -10,7 +10,7 @@ from flask import Flask, jsonify, request, send_from_directory
 
 from .analyze import VIEW_TAGS, analyze_session, list_people_in_video, release_score
 from .db import connect, ensure_seeded, list_player_angle_rows, list_player_catalog, save_session, upsert_player
-from .similarity import match_views
+from .similarity import match_player, match_views
 
 ROOT = Path(__file__).resolve().parent.parent
 STATIC = ROOT / "static"
@@ -130,6 +130,17 @@ def _collect_videos():
     return out
 
 
+def _query_views(session):
+    views = [
+        {"view": view.view, "space": view.space or "3d", "angles": view.release_angles}
+        for view in session.views
+        if view.release_angles and not view.error
+    ]
+    if not views and session.release_angles_merged:
+        views = [{"view": "merged", "space": "3d", "angles": session.release_angles_merged}]
+    return views
+
+
 @app.post("/api/analyze")
 def analyze():
     videos = _collect_videos()
@@ -143,11 +154,15 @@ def analyze():
         hand = None
     max_frames = min(400, max(60, int(request.form.get("max_frames", 240))))
     lang = request.form.get("lang") or "ko"
+    target_player_key = (request.form.get("target_player_key") or "").strip()
 
     try:
         conn = connect()
         try:
             catalog = list_player_angle_rows(conn)
+            available_keys = {str(row["player_key"]) for row in catalog}
+            if target_player_key and target_player_key not in available_keys:
+                return jsonify({"error": "Selected player does not have a compatible 3D profile."}), 400
 
             def run_one(index: int):
                 sess = analyze_session(
@@ -161,13 +176,7 @@ def analyze():
                     return None
                 if release_score(sess.release_angles_merged) <= 0:
                     return None
-                qv = [
-                    {"view": v.view, "angles": v.release_angles}
-                    for v in sess.views
-                    if v.release_angles and not v.error
-                ]
-                if not qv and sess.release_angles_merged:
-                    qv = [{"view": "merged", "angles": sess.release_angles_merged}]
+                qv = _query_views(sess)
                 found = match_views(qv, catalog, top_k=5)
                 if not found:
                     return None
@@ -198,18 +207,21 @@ def analyze():
                 )
                 if session.error and not session.release_angles_merged:
                     return jsonify({"error": session.error, "analysis": session.to_dict()}), 422
-                query_views = [
-                    {"view": v.view, "angles": v.release_angles}
-                    for v in session.views
-                    if v.release_angles and not v.error
-                ]
+                query_views = _query_views(session)
                 matches = match_views(query_views, catalog, top_k=5)
             else:
                 session, matches = packed
 
+            query_views = _query_views(session)
             match_dicts = [m.to_dict() for m in matches]
             top = matches[0] if matches else None
-            feedback = _feedback(top.deltas_deg, lang=lang) if top else []
+            selected = (
+                match_player(query_views, catalog, target_player_key)
+                if target_player_key
+                else None
+            )
+            feedback_reference = selected or top
+            feedback = _feedback(feedback_reference.deltas_deg, lang=lang) if feedback_reference else []
             session_id = save_session(
                 conn,
                 person_index=session.person_index,
@@ -225,6 +237,9 @@ def analyze():
                 "session_id": session_id,
                 "analysis": session.to_dict(),
                 "matches": match_dicts,
+                "closest_match": top.to_dict() if top else None,
+                "selected_match": selected.to_dict() if selected else None,
+                "target_player_key": target_player_key or None,
                 "feedback": feedback,
                 "note": "With 2–3 camera views, release angles come from multi-view triangulation (assumed front/side/oblique yaw). Single-view uses MediaPipe world landmarks. Similarity uses degrees only — not limb length or height.",
                 "disclaimer": "Player angle profiles are unofficial self-measured estimates, not affiliated with any league or athlete.",

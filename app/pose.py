@@ -124,7 +124,9 @@ def create_pose_detector(fps: float = 30.0, num_poses: int = 3):
 
     vision = mp.tasks.vision
     options = vision.PoseLandmarkerOptions(
-        base_options=mp.tasks.BaseOptions(model_asset_path=str(TASK_MODEL_PATH)),
+        # MediaPipe's native Windows path loader can fail on non-ASCII paths.
+        # Supplying bytes keeps projects under folders such as "문서" usable.
+        base_options=mp.tasks.BaseOptions(model_asset_buffer=TASK_MODEL_PATH.read_bytes()),
         running_mode=vision.RunningMode.VIDEO,
         min_pose_detection_confidence=0.45,
         min_pose_presence_confidence=0.45,

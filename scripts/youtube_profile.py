@@ -145,6 +145,13 @@ def load_json() -> dict:
     return json.loads(MODELS_JSON.read_text(encoding="utf-8"))
 
 
+def save_json(data: dict, path: Path = MODELS_JSON) -> None:
+    """Write deterministic JSON using the model catalog's existing CRLF style."""
+    with path.open("w", encoding="utf-8", newline="\r\n") as file:
+        json.dump(data, file, indent=2)
+        file.write("\n")
+
+
 def save_view_to_db(
     player_key: str,
     display_name: str,
@@ -217,7 +224,7 @@ def persist_player_profile(
         "primary_view": view_tag,
         "player_key": player_key,
     }
-    MODELS_JSON.write_text(json.dumps(data, indent=2), encoding="utf-8")
+    save_json(data)
     save_view_to_db(
         player_key,
         display_name,
