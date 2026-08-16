@@ -38,7 +38,7 @@ Add `app/reconstruction3d.py` with focused, independently testable units:
 - canonical model serialization and loading;
 - conversion to the existing skeleton API schema.
 
-SciPy is imported lazily inside the optimizer so serving a prebuilt model does not initialize the optimizer. The dependency is nevertheless pinned in `requirements.txt` so CI exercises the real optimization path and Render builds remain reproducible.
+SciPy is imported lazily inside the optimizer. It is pinned in `requirements-data.txt`, and CI installs that file before exercising the real optimization path. The Render image continues installing only `requirements.txt`, because serving a prebuilt model does not need SciPy; this keeps the deployed runtime dependency set unchanged.
 
 ### Curry builder
 
@@ -194,7 +194,8 @@ Extend existing smoke coverage to verify that a valid Curry canonical model is p
 - Add generated `models/canonical_3d_models.json` after validation passes.
 - Modify `app/analyze.py` only to optionally retain raw image/world observations for the offline Curry builder.
 - Modify `app/server.py` only to prefer a validated Curry canonical model before the existing fallback.
-- Modify `requirements.txt` to pin SciPy.
+- Modify `requirements-data.txt` to pin SciPy for offline building and CI.
+- Modify CI workflows to install `requirements-data.txt` while leaving the Render `requirements.txt` path unchanged.
 - Modify existing smoke tests for the Curry preference/fallback contract.
 - Modify `static/skeleton3d.js` only if validation proves necessary.
 
