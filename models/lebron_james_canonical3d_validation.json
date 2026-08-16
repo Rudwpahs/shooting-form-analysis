@@ -1,0 +1,58 @@
+{
+  "roster": [
+    {
+      "player_key": "lebron_james",
+      "display_name": "LeBron James"
+    }
+  ],
+  "passed_count": 0,
+  "failed_count": 1,
+  "players": {
+    "lebron_james": {
+      "player_key": "lebron_james",
+      "display_name": "LeBron James",
+      "model": "player_multiview_bundle_v1",
+      "candidate_counts": {
+        "front": 8,
+        "side": 8
+      },
+      "accepted_counts": {
+        "front": 0,
+        "side": 0
+      },
+      "sources": [
+        {
+          "view": "front",
+          "youtube_url": "https://www.youtube.com/watch?v=8Docgqljzso",
+          "status": "rejected",
+          "reason": "FileNotFoundError: Download produced no valid video file"
+        },
+        {
+          "view": "front",
+          "status": "aborted_repeated_failure",
+          "reason": "FileNotFoundError: Download produced no valid video file",
+          "remaining_candidates": 7
+        },
+        {
+          "view": "side",
+          "youtube_url": "https://www.youtube.com/watch?v=8Docgqljzso",
+          "status": "rejected",
+          "reason": "FileNotFoundError: Download produced no valid video file"
+        },
+        {
+          "view": "side",
+          "status": "aborted_repeated_failure",
+          "reason": "FileNotFoundError: Download produced no valid video file",
+          "remaining_candidates": 7
+        }
+      ],
+      "rejected_count": 2,
+      "output": "models/canonical_3d_models.json",
+      "passed": false,
+      "reasons": [
+        "requires 3 accepted front and side clips"
+      ]
+    }
+  },
+  "output": "models/canonical_3d_models.json"
+}

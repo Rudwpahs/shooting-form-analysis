@@ -1,0 +1,61 @@
+{
+  "player_key": "stephen_curry",
+  "model": "curry_multiview_bundle_v1",
+  "passed": false,
+  "activated": false,
+  "quality_mode": "legacy_fallback",
+  "candidate_counts": {
+    "front": 4,
+    "side": 5
+  },
+  "accepted_counts": {
+    "front": 0,
+    "side": 0
+  },
+  "reasons": [
+    "The build environment returned a 195-byte Site Unavailable HTML document in place of each tested YouTube MP4.",
+    "No repository revision contains the required raw 33-landmark front-view observations.",
+    "Activation requires at least 3 accepted front and 3 accepted side clips; the legacy Curry skeleton remains active."
+  ],
+  "tested_front_sources": [
+    "https://www.youtube.com/watch?v=eETSPnYf85E",
+    "https://www.youtube.com/shorts/VN1J6EgUQvg",
+    "https://www.youtube.com/shorts/iQVNOyQES0A",
+    "https://www.youtube.com/shorts/W3pFskLg04A"
+  ],
+  "available_side_sources": [
+    "https://www.youtube.com/watch?v=BayiaAiUyZw",
+    "https://www.youtube.com/watch?v=LqGAODTCaw4",
+    "https://www.youtube.com/watch?v=Z7afVQ7C8e8",
+    "https://www.youtube.com/watch?v=fG0yA9oBOkg",
+    "https://www.youtube.com/watch?v=fj1bITsGBJk"
+  ],
+  "synthetic_core_validation": {
+    "input": "six orthogonal-view clips with Gaussian sigma=0.012 body-scale units",
+    "optimizer_success": true,
+    "optimizer_nfev": 13,
+    "projection_rmse_before": 0.0112609429,
+    "projection_rmse_after": 0.0104874015,
+    "projection_rmse_improvement_percent": 6.869242,
+    "max_bone_cv_before": 0.038119049,
+    "max_bone_cv_after": 0.0046544255,
+    "max_bone_cv_improvement_percent": 87.789765,
+    "mean_bone_cv_before": 0.0249318702,
+    "mean_bone_cv_after": 0.0035731082,
+    "xyz_rmse_to_truth_before": 0.0076803275,
+    "xyz_rmse_to_truth_after": 0.0056449134,
+    "xyz_rmse_improvement_percent": 26.501657
+  },
+  "legacy_curry_baseline": {
+    "render_landmarks": 18,
+    "source_landmarks": 33,
+    "source_pelvis_vertical_range": 0.0,
+    "maximum_major_bone_length_range_m": 0.036,
+    "release_angle_mae_deg": {
+      "elbow": 32.32,
+      "shoulder": 9.092,
+      "hip": 8.012,
+      "knee": 20.615
+    }
+  }
+}

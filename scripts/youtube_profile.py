@@ -55,7 +55,12 @@ def yt_search(query: str, limit: int = 8) -> List[str]:
         return []
 
 
-def yt_search_metadata(query: str, limit: int = 12) -> List[dict]:
+def yt_search_metadata(
+    query: str,
+    limit: int = 12,
+    *,
+    no_check_certificates: bool = False,
+) -> List[dict]:
     """Search without downloading and return reproducible public metadata."""
     try:
         from yt_dlp import YoutubeDL
@@ -66,6 +71,7 @@ def yt_search_metadata(query: str, limit: int = 12) -> List[dict]:
             "no_warnings": True,
             "skip_download": True,
             "playlistend": limit,
+            "nocheckcertificate": bool(no_check_certificates),
         }
         with YoutubeDL(options) as ydl:
             result = ydl.extract_info(f"ytsearch{limit}:{query}", download=False) or {}
@@ -151,7 +157,12 @@ def candidate_metadata_score(search_name: str, item: dict) -> float:
     return score
 
 
-def download_clip(url: str, out_dir: Path) -> Path:
+def download_clip(
+    url: str,
+    out_dir: Path,
+    *,
+    no_check_certificates: bool = False,
+) -> Path:
     out_dir.mkdir(parents=True, exist_ok=True)
     template = str(out_dir / "clip.%(ext)s")
     if "/shorts/" in url:
@@ -170,11 +181,22 @@ def download_clip(url: str, out_dir: Path) -> Path:
         "--no-playlist",
         url,
     ]
+    if no_check_certificates:
+        cmd.insert(3, "--no-check-certificates")
     subprocess.run(cmd, check=True, capture_output=True)
     files = sorted(out_dir.glob("clip.*"), key=lambda p: p.stat().st_mtime, reverse=True)
-    if not files:
-        raise FileNotFoundError("Download produced no file")
-    return files[0]
+    for path in files:
+        if path.suffix in (".part", ".ytdl") or path.stat().st_size < 1024:
+            continue
+        import cv2
+
+        capture = cv2.VideoCapture(str(path))
+        try:
+            if capture.isOpened() and int(capture.get(cv2.CAP_PROP_FRAME_COUNT)) > 0:
+                return path
+        finally:
+            capture.release()
+    raise FileNotFoundError("Download produced no valid video file")
 
 
 def release_score(angles: dict) -> float:
@@ -222,6 +244,7 @@ def analyze_best(
     view_tag: str = "side",
     hand: str = "right",
     max_frames: int = 260,
+    capture_observations: bool = False,
 ) -> Tuple[dict, dict]:
     import cv2
 
@@ -277,6 +300,7 @@ def analyze_best(
             render_height=576,
             frame_stride=1,
             start_time_sec=start_time_sec,
+            capture_observations=capture_observations,
         )
         if view.release_angles and not view.error:
             if not release_angles_plausible(view.release_angles):
@@ -302,6 +326,8 @@ def analyze_best(
                 "timeline": view.timeline,
                 "quality": quality,
             }
+            if capture_observations:
+                meta["raw_timeline"] = view.raw_timeline
             candidates.append((score, view.release_angles, meta))
             if float(quality.get("score") or 0.0) >= 75.0:
                 break
@@ -521,6 +547,7 @@ def search_player_clip_urls(search_name: str, *, per_query: int = 6) -> List[str
 def search_player_clip_candidates(search_name: str, *, per_query: int = 12) -> List[dict]:
     suffixes = [
         "shooting form slow motion",
+        "jump shot slow motion front view",
         "jump shot slow motion side view",
         "jump shot 60fps",
         "shooting mechanics breakdown",
@@ -528,6 +555,7 @@ def search_player_clip_candidates(search_name: str, *, per_query: int = 12) -> L
         "pregame shooting workout",
         "free throw slow motion",
         "shooting form side angle",
+        "shooting form front angle",
         "practice shooting slow motion",
     ]
     by_id: Dict[str, dict] = {}

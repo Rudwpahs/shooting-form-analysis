@@ -18,6 +18,10 @@ from .db import (
     save_session,
     upsert_player,
 )
+from .reconstruction3d import (
+    SUPPORTED_CANONICAL_PLAYER_KEYS,
+    load_canonical_player_skeleton,
+)
 from .similarity import match_player, match_views
 from .skeleton import build_skeleton_timeline, release_skeleton
 
@@ -25,6 +29,17 @@ ROOT = Path(__file__).resolve().parent.parent
 STATIC = ROOT / "static"
 
 app = Flask(__name__, static_folder=str(STATIC), static_url_path="/static")
+FRONTEND_PLAYER_SCOPE = "paris_2024_usa"
+
+
+def _catalog_for_scope(catalog: list[dict], scope: str) -> list[dict]:
+    if scope != FRONTEND_PLAYER_SCOPE:
+        return catalog
+    allowed = set(SUPPORTED_CANONICAL_PLAYER_KEYS)
+    return [
+        row for row in catalog
+        if str(row.get("player_key") or "") in allowed
+    ]
 app.config["MAX_CONTENT_LENGTH"] = 200 * 1024 * 1024  # 200 MB
 ensure_seeded()
 
@@ -72,7 +87,11 @@ def health():
 def players():
     conn = connect()
     try:
-        return jsonify({"players": list_player_catalog(conn)})
+        catalog = list_player_catalog(conn)
+        catalog = _catalog_for_scope(
+            catalog, (request.args.get("scope") or "").strip()
+        )
+        return jsonify({"players": catalog})
     finally:
         conn.close()
 
@@ -87,20 +106,26 @@ def player_skeleton(player_key: str):
     if profile is None:
         return jsonify({"error": "Player does not have a compatible 3D profile."}), 404
 
-    if profile["samples"]:
-        skeleton = build_skeleton_timeline(
-            profile["samples"],
-            hand=profile["hand"],
-            view=profile["view"],
-            source_space=profile["space"],
-        )
-    else:
-        skeleton = release_skeleton(
-            profile["angles"],
-            hand=profile["hand"],
-            view=profile["view"],
-            source_space=profile["space"],
-        )
+    skeleton = (
+        load_canonical_player_skeleton(player_key)
+        if player_key in SUPPORTED_CANONICAL_PLAYER_KEYS
+        else None
+    )
+    if skeleton is None:
+        if profile["samples"]:
+            skeleton = build_skeleton_timeline(
+                profile["samples"],
+                hand=profile["hand"],
+                view=profile["view"],
+                source_space=profile["space"],
+            )
+        else:
+            skeleton = release_skeleton(
+                profile["angles"],
+                hand=profile["hand"],
+                view=profile["view"],
+                source_space=profile["space"],
+            )
     return jsonify(
         {
             "player_key": profile["player_key"],
@@ -203,11 +228,14 @@ def analyze():
     max_frames = min(400, max(60, int(request.form.get("max_frames", 240))))
     lang = request.form.get("lang") or "ko"
     target_player_key = (request.form.get("target_player_key") or "").strip()
+    catalog_scope = (request.form.get("catalog_scope") or "").strip()
 
     try:
         conn = connect()
         try:
-            catalog = list_player_angle_rows(conn)
+            catalog = _catalog_for_scope(
+                list_player_angle_rows(conn), catalog_scope
+            )
             available_keys = {str(row["player_key"]) for row in catalog}
             if target_player_key and target_player_key not in available_keys:
                 return jsonify({"error": "Selected player does not have a compatible 3D profile."}), 400

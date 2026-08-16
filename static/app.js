@@ -2,6 +2,14 @@ let selectedPerson = 0;
 let personLocked = false;
 
 const $ = (id) => document.getElementById(id);
+const FRONTEND_PLAYER_SCOPE = "paris_2024_usa";
+const VISIBLE_PLAYER_KEYS = new Set([
+  "stephen_curry",
+  "devin_booker",
+  "kevin_durant",
+  "anthony_edwards",
+  "lebron_james",
+]);
 const JOINTS = ["elbow", "shoulder", "hip", "knee"];
 const PHASES = [
   { id: "catch", label: "캐치" },
@@ -30,6 +38,16 @@ function createSkeletonViewer(prefix) {
 const userSkeletonViewer = createSkeletonViewer("user");
 const playerSkeletonViewer = createSkeletonViewer("player");
 
+function skeletonMeta(profile, fallbackView = "side") {
+  const frames = profile?.frames?.length || 0;
+  const landmarks = Object.keys(profile?.frames?.[0]?.landmarks || {}).length;
+  const quality = profile?.quality_mode === "multi_view_3d"
+    ? "Multi-view 3D"
+    : "Single-view estimated 3D";
+  const view = String(profile?.view || fallbackView).toUpperCase();
+  return `${quality} · ${frames}프레임 · ${landmarks}랜드마크 · ${view}`;
+}
+
 async function loadPlayerSkeleton(playerKey, displayName, scroll = true) {
   const section = $("player_skeleton_section");
   section.hidden = false;
@@ -40,8 +58,7 @@ async function loadPlayerSkeleton(playerKey, displayName, scroll = true) {
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || "선수 스켈레톤 로드 실패");
     playerSkeletonViewer.setProfile(data.skeleton);
-    const frames = data.skeleton?.frames?.length || 0;
-    $("player_skeleton_meta").textContent = `표준 신체 비율 · ${frames}개 3D 랜드마크 프레임 · ${String(data.skeleton?.view || "side").toUpperCase()}`;
+    $("player_skeleton_meta").textContent = skeletonMeta(data.skeleton);
     if (scroll) section.scrollIntoView({ behavior: "smooth", block: "center" });
   } catch (err) {
     $("player_skeleton_meta").textContent = String(err.message || err);
@@ -55,8 +72,7 @@ function showUserSkeleton(views) {
   section.hidden = !view;
   if (!view) return;
   userSkeletonViewer.setProfile(view.skeleton);
-  const frames = view.skeleton.frames.length;
-  $("user_skeleton_meta").textContent = `표준 신체 비율 · ${frames}개 3D 랜드마크 프레임 · ${String(view.view || "side").toUpperCase()}`;
+  $("user_skeleton_meta").textContent = skeletonMeta(view.skeleton, view.view);
 }
 
 function firstVideoFile() {
@@ -107,7 +123,7 @@ async function loadHealth() {
     const data = await res.json();
     const el = $("health");
     if (data.ok) {
-      el.textContent = `API OK · ${data.players} profiles`;
+      el.textContent = `API OK · ${VISIBLE_PLAYER_KEYS.size} Olympic profiles`;
       el.classList.add("ok");
     } else {
       el.textContent = "API unavailable";
@@ -118,13 +134,14 @@ async function loadHealth() {
 }
 
 async function loadPlayers() {
-  const res = await fetch("/api/players");
+  const res = await fetch("/api/players?scope=paris_2024_usa");
   const data = await res.json();
   const root = $("players");
   const selector = $("target_player");
   root.innerHTML = "";
   selector.length = 1;
-  (data.players || []).forEach((p) => {
+  const visiblePlayers = (data.players || []).filter((p) => VISIBLE_PLAYER_KEYS.has(p.player_key));
+  visiblePlayers.forEach((p) => {
     const option = document.createElement("option");
     option.value = p.player_key;
     option.textContent = p.display_name;
@@ -147,6 +164,10 @@ async function loadPlayers() {
     });
     root.appendChild(el);
   });
+  if (visiblePlayers.length) {
+    const first = visiblePlayers[0];
+    await loadPlayerSkeleton(first.player_key, first.display_name, false);
+  }
 }
 
 $("btn_people").addEventListener("click", async () => {
@@ -356,6 +377,7 @@ $("btn_analyze").addEventListener("click", async () => {
   fd.append("person_index", String(selectedPerson));
   fd.append("auto_person", personLocked ? "0" : "1");
   fd.append("lang", "ko");
+  fd.append("catalog_scope", FRONTEND_PLAYER_SCOPE);
   const hand = $("hand").value;
   if (hand) fd.append("hand", hand);
   const targetPlayer = $("target_player").value;

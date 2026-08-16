@@ -51,11 +51,13 @@ class ViewAnalysis:
     followthrough_frame_index: int = -1
     release_landmarks: List[dict] = field(default_factory=list)
     motion_quality: Dict[str, object] = field(default_factory=dict)
+    raw_timeline: List[dict] = field(default_factory=list, repr=False)
     error: str = ""
 
     def to_dict(self, *, include_skeleton: bool = True) -> dict:
         data = asdict(self)
         data.pop("sequence_angles", None)
+        data.pop("raw_timeline", None)
         # Landmarks are large; keep only a flag in API payloads.
         lms = data.pop("release_landmarks", None) or []
         data["has_release_landmarks"] = bool(lms)
@@ -248,6 +250,51 @@ def _timeline_from_shot(
     return samples if timeline_duration_is_plausible(samples, fps=fps) else []
 
 
+def _raw_timeline_from_shot(
+    sequence: Sequence[dict], span: ShotSpan, fps: float
+) -> List[dict]:
+    """Keep builder-only image/world observations across the detected shot."""
+    if fps <= 0:
+        fps = 30.0
+    if not sequence or not shot_span_is_complete(span):
+        return []
+    catch_frame = int(sequence[span.catch_index]["frame"])
+    followthrough_frame = int(sequence[span.followthrough_index]["frame"])
+    samples: List[dict] = []
+    for sequence_index, item in enumerate(sequence):
+        frame = int(item["frame"])
+        if frame < catch_frame or frame > followthrough_frame:
+            continue
+        snapshot = item["snapshot"]
+        angles = snapshot.as_dict()
+        samples.append(
+            {
+                "t": round((frame - catch_frame) / fps, 4),
+                "frame": frame,
+                "phase": phase_label(sequence_index, span),
+                "elbow": float(angles["elbow"]),
+                "shoulder": float(angles["shoulder"]),
+                "hip": float(angles["hip"]),
+                "knee": float(angles["knee"]),
+                "image_landmarks": item["image_landmarks"],
+                "world_landmarks": item["world_landmarks"],
+            }
+        )
+    return samples
+
+
+def _landmark_arrays(landmarks) -> List[List[float]]:
+    return [
+        [
+            float(item["x"]),
+            float(item["y"]),
+            float(item["z"]),
+            float(item["visibility"]),
+        ]
+        for item in _landmarks_payload(landmarks)
+    ]
+
+
 def release_score(angles: dict) -> float:
     elbow = float(angles.get("elbow", 0) or 0)
     shoulder = float(angles.get("shoulder", 0) or 0)
@@ -328,6 +375,7 @@ def analyze_view(
     after_release_sec: float = 1.0,
     frame_stride: int = 1,
     start_time_sec: float = 0.0,
+    capture_observations: bool = False,
 ) -> ViewAnalysis:
     cap = cv2.VideoCapture(str(video_path))
     detector = None
@@ -351,6 +399,7 @@ def analyze_view(
 
         candidates: List[Tuple[float, int, AngleSnapshot, List[dict]]] = []
         sequence: List[Tuple[int, AngleSnapshot, float, List[List[float]]]] = []
+        raw_sequence: List[dict] = []
         frames_scanned = 0
         after_frames = max(1, int(round(max(after_release_sec, 0.6) * fps)))
         hard_cap = max_frames + after_frames
@@ -376,8 +425,22 @@ def analyze_view(
                     candidates.append(
                         (wrist_y, current_frame, snap, landmark_payload)
                     )
-                    if keep_sequence:
+                    if keep_sequence or capture_observations:
                         sequence.append((current_frame, snap, wrist_y, normalized_pose))
+                    if capture_observations:
+                        raw_sequence.append(
+                            {
+                                "frame": current_frame,
+                                "snapshot": snap,
+                                "wrist_y": wrist_y,
+                                "image_landmarks": _landmark_arrays(
+                                    pose.image_landmarks
+                                ),
+                                "world_landmarks": _landmark_arrays(
+                                    pose.world_landmarks
+                                ),
+                            }
+                        )
             if frames_scanned >= max_frames and candidates:
                 _, rel_so_far, _, _ = min(candidates, key=lambda item: item[0])
                 if frames_scanned > rel_so_far + after_frames:
@@ -438,6 +501,11 @@ def analyze_view(
                     timeline = fallback_timeline
         if timeline:
             timeline = smooth_timeline(timeline, window=5)
+        raw_timeline = (
+            _raw_timeline_from_shot(raw_sequence, span, fps)
+            if capture_observations and timeline
+            else []
+        )
         catch_frame = seq_frames[span.catch_index] if seq_frames else -1
         dip_frame = seq_frames[span.dip_index] if seq_frames else -1
         ft_frame = seq_frames[span.followthrough_index] if seq_frames else -1
@@ -464,6 +532,7 @@ def analyze_view(
             followthrough_frame_index=ft_frame,
             release_landmarks=release_lms,
             motion_quality=evaluate_timeline_quality(timeline, fps=fps) if timeline else {},
+            raw_timeline=raw_timeline,
         )
     except Exception as exc:
         return ViewAnalysis(

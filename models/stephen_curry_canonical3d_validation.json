@@ -1,0 +1,58 @@
+{
+  "roster": [
+    {
+      "player_key": "stephen_curry",
+      "display_name": "Stephen Curry"
+    }
+  ],
+  "passed_count": 0,
+  "failed_count": 1,
+  "players": {
+    "stephen_curry": {
+      "player_key": "stephen_curry",
+      "display_name": "Stephen Curry",
+      "model": "player_multiview_bundle_v1",
+      "candidate_counts": {
+        "front": 12,
+        "side": 8
+      },
+      "accepted_counts": {
+        "front": 0,
+        "side": 0
+      },
+      "sources": [
+        {
+          "view": "front",
+          "youtube_url": "https://www.youtube.com/watch?v=BayiaAiUyZw",
+          "status": "rejected",
+          "reason": "FileNotFoundError: Download produced no valid video file"
+        },
+        {
+          "view": "front",
+          "status": "aborted_repeated_failure",
+          "reason": "FileNotFoundError: Download produced no valid video file",
+          "remaining_candidates": 11
+        },
+        {
+          "view": "side",
+          "youtube_url": "https://www.youtube.com/watch?v=BayiaAiUyZw",
+          "status": "rejected",
+          "reason": "FileNotFoundError: Download produced no valid video file"
+        },
+        {
+          "view": "side",
+          "status": "aborted_repeated_failure",
+          "reason": "FileNotFoundError: Download produced no valid video file",
+          "remaining_candidates": 7
+        }
+      ],
+      "rejected_count": 2,
+      "output": "models/canonical_3d_models.json",
+      "passed": false,
+      "reasons": [
+        "requires 3 accepted front and side clips"
+      ]
+    }
+  },
+  "output": "models/canonical_3d_models.json"
+}

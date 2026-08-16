@@ -1,0 +1,50 @@
+{
+  "team": "2024 Paris Olympics USA Men's National Team",
+  "scope": "intersection with nba_player_models.json",
+  "model": "player_multiview_bundle_v1",
+  "passed_count": 0,
+  "failed_count": 5,
+  "activation_status": "legacy_fallback_preserved",
+  "environment_failure": "FileNotFoundError: Download produced no valid video file",
+  "players": {
+    "stephen_curry": {
+      "display_name": "Stephen Curry",
+      "candidate_counts": {"front": 12, "side": 8},
+      "accepted_counts": {"front": 0, "side": 0},
+      "passed": false,
+      "report": "models/stephen_curry_canonical3d_validation.json"
+    },
+    "devin_booker": {
+      "display_name": "Devin Booker",
+      "candidate_counts": {"front": 8, "side": 3},
+      "accepted_counts": {"front": 0, "side": 0},
+      "passed": false,
+      "report": "models/devin_booker_canonical3d_validation.json"
+    },
+    "kevin_durant": {
+      "display_name": "Kevin Durant",
+      "candidate_counts": {"front": 8, "side": 3},
+      "accepted_counts": {"front": 0, "side": 0},
+      "passed": false,
+      "report": "models/kevin_durant_canonical3d_validation.json"
+    },
+    "anthony_edwards": {
+      "display_name": "Anthony Edwards",
+      "candidate_counts": {"front": 6, "side": 4},
+      "accepted_counts": {"front": 0, "side": 0},
+      "passed": false,
+      "identity_rejections": [
+        "Anthony Davis Shooting Form Slow Motion (1080_HD)"
+      ],
+      "report": "models/anthony_edwards_canonical3d_validation.json"
+    },
+    "lebron_james": {
+      "display_name": "LeBron James",
+      "candidate_counts": {"front": 8, "side": 8},
+      "accepted_counts": {"front": 0, "side": 0},
+      "passed": false,
+      "report": "models/lebron_james_canonical3d_validation.json"
+    }
+  },
+  "publication_rule": "Each player needs at least 3 effective front and 3 effective side clips and must pass every reconstruction gate before canonical_3d_models.json is updated."
+}

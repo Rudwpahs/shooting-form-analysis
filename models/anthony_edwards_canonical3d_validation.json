@@ -1,0 +1,58 @@
+{
+  "roster": [
+    {
+      "player_key": "anthony_edwards",
+      "display_name": "Anthony Edwards"
+    }
+  ],
+  "passed_count": 0,
+  "failed_count": 1,
+  "players": {
+    "anthony_edwards": {
+      "player_key": "anthony_edwards",
+      "display_name": "Anthony Edwards",
+      "model": "player_multiview_bundle_v1",
+      "candidate_counts": {
+        "front": 6,
+        "side": 4
+      },
+      "accepted_counts": {
+        "front": 0,
+        "side": 0
+      },
+      "sources": [
+        {
+          "view": "front",
+          "youtube_url": "https://www.youtube.com/watch?v=AF2AlZ5HZzw",
+          "status": "rejected",
+          "reason": "FileNotFoundError: Download produced no valid video file"
+        },
+        {
+          "view": "front",
+          "status": "aborted_repeated_failure",
+          "reason": "FileNotFoundError: Download produced no valid video file",
+          "remaining_candidates": 5
+        },
+        {
+          "view": "side",
+          "youtube_url": "https://www.youtube.com/watch?v=AF2AlZ5HZzw",
+          "status": "rejected",
+          "reason": "FileNotFoundError: Download produced no valid video file"
+        },
+        {
+          "view": "side",
+          "status": "aborted_repeated_failure",
+          "reason": "FileNotFoundError: Download produced no valid video file",
+          "remaining_candidates": 3
+        }
+      ],
+      "rejected_count": 2,
+      "output": "models/canonical_3d_models.json",
+      "passed": false,
+      "reasons": [
+        "requires 3 accepted front and side clips"
+      ]
+    }
+  },
+  "output": "models/canonical_3d_models.json"
+}
