@@ -42,8 +42,8 @@ function skeletonMeta(profile, fallbackView = "side") {
   const frames = profile?.frames?.length || 0;
   const landmarks = Object.keys(profile?.frames?.[0]?.landmarks || {}).length;
   const quality = profile?.quality_mode === "multi_view_3d"
-    ? "Multi-view 3D"
-    : "Single-view estimated 3D";
+    ? "Multi-view geometric 3D (validated source required)"
+    : "Single-view pose visualization (not validated 3D)";
   const view = String(profile?.view || fallbackView).toUpperCase();
   return `${quality} · ${frames}프레임 · ${landmarks}랜드마크 · ${view}`;
 }
@@ -89,6 +89,13 @@ function appendVideos(fd) {
   return Boolean(side || front || oblique);
 }
 
+async function appendVerificationMetadata(fd) {
+  const calibration = $("calibration_file")?.files?.[0];
+  const sync = $("sync_file")?.files?.[0];
+  if (calibration) fd.append("calibration_json", await calibration.text());
+  if (sync) fd.append("sync_json", await sync.text());
+}
+
 function setStep(n) {
   document.querySelectorAll(".step").forEach((el) => {
     const step = Number(el.dataset.step);
@@ -123,7 +130,9 @@ async function loadHealth() {
     const data = await res.json();
     const el = $("health");
     if (data.ok) {
-      el.textContent = `API OK · ${VISIBLE_PLAYER_KEYS.size} Olympic profiles`;
+      const verified2d = Number(data.verified_2d_profiles || 0);
+      const verified3d = Number(data.verified_3d_profiles || 0);
+      el.textContent = `API OK · verified references ${verified2d} · verified 3D ${verified3d}`;
       el.classList.add("ok");
     } else {
       el.textContent = "API unavailable";
@@ -133,40 +142,62 @@ async function loadHealth() {
   }
 }
 
+function profileStatusText(profile) {
+  const status = String(profile.verification_status || "unverified_legacy");
+  const labels = {
+    verified_2d: "승인된 2D 참조",
+    verified_3d: "검증된 3D 모델",
+    draft: "검토 대기",
+    rejected: "거절됨",
+    unverified_legacy: "출처 검증 전 · 매칭/3D 비활성",
+  };
+  return labels[status] || status;
+}
+
 async function loadPlayers() {
-  const res = await fetch("/api/players?scope=paris_2024_usa");
+  const res = await fetch("/api/players?scope=paris_2024_usa&include_unverified=1");
   const data = await res.json();
   const root = $("players");
   const selector = $("target_player");
   root.innerHTML = "";
   selector.length = 1;
   const visiblePlayers = (data.players || []).filter((p) => VISIBLE_PLAYER_KEYS.has(p.player_key));
+  const verifiedPlayers = visiblePlayers.filter((p) => ["verified_2d", "verified_3d"].includes(p.verification_status));
   visiblePlayers.forEach((p) => {
-    const option = document.createElement("option");
-    option.value = p.player_key;
-    option.textContent = p.display_name;
-    selector.appendChild(option);
+    if (["verified_2d", "verified_3d"].includes(p.verification_status)) {
+      const option = document.createElement("option");
+      option.value = p.player_key;
+      option.textContent = p.display_name;
+      selector.appendChild(option);
+    }
 
     const a = p.angles || {};
+    const reasons = (p.verification_reasons || []).slice(0, 1).join(" · ");
+    const canOpen3d = p.verification_status === "verified_3d";
     const el = document.createElement("div");
     el.className = "match";
     el.innerHTML = `
       <div>
         <strong>${p.display_name}</strong>
-        <div><em>3D 관절각 프로필</em></div>
+        <div><em>${profileStatusText(p)}</em></div>
+        ${reasons ? `<small>${reasons}</small>` : ""}
       </div>
       <em>E ${Number(a.elbow).toFixed(1)}°</em>
       <em>S ${Number(a.shoulder).toFixed(1)}°</em>
-      <button type="button" class="btn ghost compact skeleton-open">3D 스켈레톤</button>
+      <button type="button" class="btn ghost compact skeleton-open" ${canOpen3d ? "" : "disabled"}>${canOpen3d ? "검증된 3D 보기" : "3D 검증 대기"}</button>
     `;
-    el.querySelector(".skeleton-open").addEventListener("click", () => {
-      loadPlayerSkeleton(p.player_key, p.display_name);
-    });
+    if (canOpen3d) {
+      el.querySelector(".skeleton-open").addEventListener("click", () => {
+        loadPlayerSkeleton(p.player_key, p.display_name);
+      });
+    }
     root.appendChild(el);
   });
-  if (visiblePlayers.length) {
-    const first = visiblePlayers[0];
-    await loadPlayerSkeleton(first.player_key, first.display_name, false);
+  if (!visiblePlayers.length) {
+    root.textContent = "현재 범위에 등록된 선수 프로필이 없습니다.";
+  }
+  if (!verifiedPlayers.length) {
+    $("player_skeleton_section").hidden = true;
   }
 }
 
@@ -382,8 +413,14 @@ $("btn_analyze").addEventListener("click", async () => {
   if (hand) fd.append("hand", hand);
   const targetPlayer = $("target_player").value;
   if (targetPlayer) fd.append("target_player_key", targetPlayer);
+  try {
+    await appendVerificationMetadata(fd);
+  } catch (err) {
+    $("status").textContent = `메타데이터 파일을 읽을 수 없습니다: ${String(err.message || err)}`;
+    return;
+  }
 
-  setBusy(true, "3D 각도 분석 중… (1~2분 걸릴 수 있습니다)");
+  setBusy(true, "슛폼 분석 중… (1~2분 걸릴 수 있습니다)");
   try {
     const res = await fetch("/api/analyze", { method: "POST", body: fd });
     const data = await res.json();

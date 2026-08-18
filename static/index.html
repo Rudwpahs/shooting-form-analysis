@@ -16,7 +16,7 @@
     <header class="hero">
       <p class="eyebrow">SHOOTING FORM ANALYSIS</p>
       <h1>각도만으로<br />폼을 비교한다.</h1>
-      <p class="sub">1~3시점 영상 → 사람 선택 → 멀티뷰 삼각측량 3D 관절각(°) → 선수 프로필 매칭. 키·팔 길이는 쓰지 않습니다.</p>
+      <p class="sub">단일 영상은 슛 이벤트·2D 자세 분석, 검증된 다중 시점 입력은 보정 기반 3D 관절각 분석을 제공합니다. 승인된 출처가 있는 프로필만 선수 참조 매칭에 사용됩니다.</p>
       <div class="hero-meta">
         <span class="pill" id="health">connecting…</span>
         <span class="pill quiet">ANGLE-ONLY · UNOFFICIAL</span>
@@ -54,6 +54,24 @@
           <em id="name_oblique">파일 선택</em>
         </label>
       </div>
+      <details class="capture-meta">
+        <summary>검증된 다중 시점 3D 메타데이터 (선택)</summary>
+        <p>같은 슛을 촬영한 보정·동기화된 카메라 세트가 있을 때만 JSON 파일을 추가하세요. 파일이 없으면 결과는 pose-only 분석으로 표시됩니다.</p>
+        <div class="upload-grid">
+          <label class="drop">
+            <strong>CALIBRATION JSON</strong>
+            <span>intrinsic · extrinsic · image size</span>
+            <input type="file" id="calibration_file" accept="application/json,.json" />
+            <em>선택 안 함</em>
+          </label>
+          <label class="drop">
+            <strong>SYNC JSON</strong>
+            <span>offset · confidence · method</span>
+            <input type="file" id="sync_file" accept="application/json,.json" />
+            <em>선택 안 함</em>
+          </label>
+        </div>
+      </details>
       <div class="toolbar">
         <label class="field">핸드
           <select id="hand">
@@ -68,7 +86,7 @@
           </select>
         </label>
         <button type="button" class="btn ghost" id="btn_people">사람 찾기</button>
-        <button type="button" class="btn primary" id="btn_analyze" disabled>3D 각도 분석</button>
+        <button type="button" class="btn primary" id="btn_analyze" disabled>슛폼 분석</button>
       </div>
       <p class="selection-help">선수를 고르면 선택 선수와의 유사도와 실제 최유사 선수를 함께 보여줍니다.</p>
       <p id="status" class="status" role="status"></p>
@@ -131,8 +149,8 @@
       <div class="skeleton-profile" id="user_skeleton_section" hidden>
         <div class="skeleton-heading">
           <div>
-            <h3>내 3D 슛폼 스켈레톤</h3>
-            <p id="user_skeleton_meta">표준 신체 비율 · 각도 기반 3D 랜드마크</p>
+            <h3>내 슛폼 자세 시각화</h3>
+            <p id="user_skeleton_meta">단일 영상은 3D 정확도 검증 전 pose 시각화입니다.</p>
           </div>
           <span class="skeleton-tip">드래그 회전 · 휠 확대</span>
         </div>
@@ -164,14 +182,14 @@
 
     <section class="block">
       <div class="block-head">
-        <h2>파리 올림픽 미국 대표팀 3D 프로필</h2>
-        <p>선수별 스켈레톤을 회전하고 슈팅 타임라인을 재생할 수 있습니다.</p>
+        <h2>파리 올림픽 미국 대표팀 참조 프로필</h2>
+        <p>출처와 검증 상태를 확인하세요. 검증된 3D 모델만 회전·재생할 수 있습니다.</p>
       </div>
       <div class="skeleton-profile player-skeleton" id="player_skeleton_section" hidden>
         <div class="skeleton-heading">
           <div>
-            <h3 id="player_skeleton_title">선수 3D 스켈레톤</h3>
-            <p id="player_skeleton_meta">표준 신체 비율 · 각도 기반 3D 랜드마크</p>
+            <h3 id="player_skeleton_title">검증된 선수 3D 스켈레톤</h3>
+            <p id="player_skeleton_meta">출처·다중 시점·3D 검증을 통과한 모델만 표시됩니다.</p>
           </div>
           <span class="skeleton-tip">드래그 회전 · 휠 확대</span>
         </div>
