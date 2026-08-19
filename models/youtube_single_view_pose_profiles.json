@@ -1,0 +1,504 @@
+{
+  "schema_version": "youtube-pose-v1",
+  "profile_count": 16,
+  "candidate_count": 16,
+  "rejected_count": 0,
+  "profiles": [
+    {
+      "player_key": "stephen_curry",
+      "display_name": "Stephen Curry",
+      "model_status": "youtube_pose_candidate",
+      "sample_count": 5,
+      "metrics": {
+        "Elbow angle": 146.97536490570542,
+        "Shoulder angle": 106.06591386266314,
+        "Hip angle": 161.4813196700067,
+        "Knee angle": 147.41778558248572
+      },
+      "source_url": "https://www.youtube.com/watch?v=fG0yA9oBOkg",
+      "source_title": "Stephen Curry shooting form slow motion",
+      "review": {
+        "verdict": "ACCEPT",
+        "player_match": "YES",
+        "real_shot": "YES",
+        "ball_hand_release_visible": "YES",
+        "full_body_visible": "YES",
+        "camera_view": "single",
+        "pose_extraction": "suitable",
+        "evidence": "The video shows multiple clear, full-body shots of Stephen Curry shooting from a single, stable camera angle, with the release point clearly visible in each shot."
+      },
+      "model_boundary": {
+        "model_kind": "single_view_youtube_3d_pose_estimate",
+        "coordinate_space": "camera_relative_pose_estimate",
+        "calibration_status": "not_available",
+        "metric_3d_status": "not_available",
+        "publication_rule": "Do not label as calibrated, metric, or verified_3d."
+      }
+    },
+    {
+      "player_key": "devin_booker",
+      "display_name": "Devin Booker",
+      "model_status": "youtube_pose_candidate",
+      "sample_count": 3,
+      "metrics": {
+        "Elbow angle": 159.110093518911,
+        "Shoulder angle": 134.69751549596006,
+        "Hip angle": 164.92214715911604,
+        "Knee angle": 154.75329663853393
+      },
+      "source_url": "https://www.youtube.com/watch?v=JGRnvtZLTgQ",
+      "source_title": "Devin Booker Shooting Form Slow Motion 2021-2022 (1080_HD)",
+      "review": {
+        "verdict": "ACCEPT",
+        "player_match": "YES",
+        "real_shot": "YES",
+        "ball_hand_release_visible": "YES",
+        "full_body_visible": "YES",
+        "camera_view": "multiple_unsynchronized",
+        "pose_extraction": "suitable",
+        "evidence": "This video is a high-quality compilation of Devin Booker's jump shots from various single-view angles. Many clips include slow-motion segments that clearly capture his full body and the moment of ball release, making it an excellent source for pose profiling."
+      },
+      "model_boundary": {
+        "model_kind": "single_view_youtube_3d_pose_estimate",
+        "coordinate_space": "camera_relative_pose_estimate",
+        "calibration_status": "not_available",
+        "metric_3d_status": "not_available",
+        "publication_rule": "Do not label as calibrated, metric, or verified_3d."
+      }
+    },
+    {
+      "player_key": "kevin_durant",
+      "display_name": "Kevin Durant",
+      "model_status": "youtube_pose_candidate",
+      "sample_count": 3,
+      "metrics": {
+        "Elbow angle": 139.1720705261426,
+        "Shoulder angle": 139.41519562898753,
+        "Hip angle": 169.14390526957698,
+        "Knee angle": 168.82427697013046
+      },
+      "source_url": "https://www.youtube.com/watch?v=Ug8quL88nRs",
+      "source_title": "Kevin Durant Crosses Up Andre Iguodala in Slow Motion",
+      "review": {
+        "verdict": "ACCEPT",
+        "player_match": "YES",
+        "real_shot": "YES",
+        "ball_hand_release_visible": "YES",
+        "full_body_visible": "YES",
+        "camera_view": "single",
+        "pose_extraction": "suitable",
+        "evidence": "The video provides a clear, continuous view of Kevin Durant performing a jump shot, with his full body and the ball release clearly visible from a single camera perspective."
+      },
+      "model_boundary": {
+        "model_kind": "single_view_youtube_3d_pose_estimate",
+        "coordinate_space": "camera_relative_pose_estimate",
+        "calibration_status": "not_available",
+        "metric_3d_status": "not_available",
+        "publication_rule": "Do not label as calibrated, metric, or verified_3d."
+      }
+    },
+    {
+      "player_key": "donovan_mitchell",
+      "display_name": "Donovan Mitchell",
+      "model_status": "youtube_pose_candidate",
+      "sample_count": 3,
+      "metrics": {
+        "Elbow angle": 146.64,
+        "Shoulder angle": 111.36,
+        "Hip angle": 167.29,
+        "Knee angle": 155.95
+      },
+      "source_url": "https://www.youtube.com/watch?v=FNl48HFXgLQ",
+      "source_title": "Donovan Mitchell Shooting Form Slow Motion (1080_HD)",
+      "review": {
+        "verdict": "ACCEPT",
+        "player_match": "YES",
+        "real_shot": "YES",
+        "ball_hand_release_visible": "YES",
+        "full_body_visible": "YES",
+        "camera_view": "multiple_unsynchronized",
+        "pose_extraction": "suitable",
+        "evidence": "The video is a compilation of Donovan Mitchell (#45) shooting 3-pointers from various angles (front, side, back). Each shot is captured in a single, continuous camera view, often followed by a slow-motion replay that clearly shows the full body, ball, and hand release."
+      },
+      "model_boundary": {
+        "model_kind": "single_view_youtube_3d_pose_estimate",
+        "coordinate_space": "camera_relative_pose_estimate",
+        "calibration_status": "not_available",
+        "metric_3d_status": "not_available",
+        "publication_rule": "Do not label as calibrated, metric, or verified_3d."
+      }
+    },
+    {
+      "player_key": "anthony_edwards",
+      "display_name": "Anthony Edwards",
+      "model_status": "youtube_pose_candidate",
+      "sample_count": 5,
+      "metrics": {
+        "Elbow angle": 119.88,
+        "Shoulder angle": 122.62,
+        "Hip angle": 164.92,
+        "Knee angle": 148.19
+      },
+      "source_url": "https://www.youtube.com/watch?v=AF2AlZ5HZzw",
+      "source_title": "Anthony Edwards Shooting Form Slow Motion 2022 (1080_HD) Part 1",
+      "review": {
+        "verdict": "ACCEPT",
+        "player_match": "YES",
+        "real_shot": "YES",
+        "ball_hand_release_visible": "YES",
+        "full_body_visible": "YES",
+        "camera_view": "multiple_unsynchronized",
+        "pose_extraction": "suitable",
+        "evidence": "The video is a compilation of several high-quality, full-body shooting clips of Anthony Edwards, including free throws and jump shots, with clear views of his release hand and overall form."
+      },
+      "model_boundary": {
+        "model_kind": "single_view_youtube_3d_pose_estimate",
+        "coordinate_space": "camera_relative_pose_estimate",
+        "calibration_status": "not_available",
+        "metric_3d_status": "not_available",
+        "publication_rule": "Do not label as calibrated, metric, or verified_3d."
+      }
+    },
+    {
+      "player_key": "tyrese_maxey",
+      "display_name": "Tyrese Maxey",
+      "model_status": "youtube_pose_candidate",
+      "sample_count": 3,
+      "metrics": {
+        "Elbow angle": 155.985,
+        "Shoulder angle": 129.74,
+        "Hip angle": 159.18,
+        "Knee angle": 142.105
+      },
+      "source_url": "https://www.youtube.com/watch?v=GPUtArsmlwk",
+      "source_title": "How To Shoot Like Tyrese Maxey  ( 3 Jumpshot  Hacks )",
+      "review": {
+        "verdict": "ACCEPT",
+        "player_match": "YES",
+        "real_shot": "YES",
+        "ball_hand_release_visible": "YES",
+        "full_body_visible": "YES",
+        "camera_view": "multiple_unsynchronized",
+        "pose_extraction": "suitable",
+        "evidence": "The video contains numerous clear, full-body game clips of Tyrese Maxey shooting from various angles (e.g., 0:32, 1:11, 1:44, 2:17), showing the entire motion from load to release."
+      },
+      "model_boundary": {
+        "model_kind": "single_view_youtube_3d_pose_estimate",
+        "coordinate_space": "camera_relative_pose_estimate",
+        "calibration_status": "not_available",
+        "metric_3d_status": "not_available",
+        "publication_rule": "Do not label as calibrated, metric, or verified_3d."
+      }
+    },
+    {
+      "player_key": "luka_don_i",
+      "display_name": "Luka Dončić",
+      "model_status": "youtube_pose_candidate",
+      "sample_count": 3,
+      "metrics": {
+        "Elbow angle": 139.8,
+        "Shoulder angle": 121.18,
+        "Hip angle": 150.67,
+        "Knee angle": 124.67
+      },
+      "source_url": "https://www.youtube.com/watch?v=3sT9Xf_rsyM",
+      "source_title": "Luka Doncic Shooting Form Slow Motion 2021-2022 (1080_HD) Part 1",
+      "review": {
+        "verdict": "ACCEPT",
+        "player_match": "YES",
+        "real_shot": "YES",
+        "ball_hand_release_visible": "YES",
+        "full_body_visible": "YES",
+        "camera_view": "multiple_unsynchronized",
+        "pose_extraction": "suitable",
+        "evidence": "The video features several high-quality, slow-motion clips of Luka Dončić performing jump shots in both game and practice settings. In these clips, his entire body is visible from the start of the shooting motion through the release, providing a clear view of his mechanics."
+      },
+      "model_boundary": {
+        "model_kind": "single_view_youtube_3d_pose_estimate",
+        "coordinate_space": "camera_relative_pose_estimate",
+        "calibration_status": "not_available",
+        "metric_3d_status": "not_available",
+        "publication_rule": "Do not label as calibrated, metric, or verified_3d."
+      }
+    },
+    {
+      "player_key": "jamal_murray",
+      "display_name": "Jamal Murray",
+      "model_status": "youtube_pose_candidate",
+      "sample_count": 4,
+      "metrics": {
+        "Elbow angle": 151.51,
+        "Shoulder angle": 133.37,
+        "Hip angle": 160.99,
+        "Knee angle": 153.96
+      },
+      "source_url": "https://www.youtube.com/watch?v=OhzAd-4ZE3M",
+      "source_title": "Jamal Murray Shooting Form Slow Motion (1080_HD)",
+      "review": {
+        "verdict": "ACCEPT",
+        "player_match": "YES",
+        "real_shot": "YES",
+        "ball_hand_release_visible": "YES",
+        "full_body_visible": "YES",
+        "camera_view": "multiple_unsynchronized",
+        "pose_extraction": "suitable",
+        "evidence": "The video is a compilation of Jamal Murray's jump shots from various NBA games. Numerous clips (e.g., at 0:38, 1:03, 1:40, and 2:03) provide clear, single-view footage of his entire body from feet to release point, making it an excellent source for pose extraction."
+      },
+      "model_boundary": {
+        "model_kind": "single_view_youtube_3d_pose_estimate",
+        "coordinate_space": "camera_relative_pose_estimate",
+        "calibration_status": "not_available",
+        "metric_3d_status": "not_available",
+        "publication_rule": "Do not label as calibrated, metric, or verified_3d."
+      }
+    },
+    {
+      "player_key": "jalen_brunson",
+      "display_name": "Jalen Brunson",
+      "model_status": "youtube_pose_candidate",
+      "sample_count": 4,
+      "metrics": {
+        "Elbow angle": 151.825,
+        "Shoulder angle": 151.155,
+        "Hip angle": 163.785,
+        "Knee angle": 162.0
+      },
+      "source_url": "https://www.youtube.com/watch?v=mY-fwLGor1Y",
+      "source_title": "Jalen Brunson Jumpshot Fix (3 Options) | NBA 2K20 Mobile",
+      "review": {
+        "verdict": "ACCEPT",
+        "player_match": "YES",
+        "real_shot": "YES",
+        "ball_hand_release_visible": "YES",
+        "full_body_visible": "YES",
+        "camera_view": "multiple_unsynchronized",
+        "pose_extraction": "suitable",
+        "evidence": "The video provides side-by-side comparisons of Jalen Brunson's real-life shooting form with his NBA 2K animation, clearly displaying the full body and ball release from consistent angles."
+      },
+      "model_boundary": {
+        "model_kind": "single_view_youtube_3d_pose_estimate",
+        "coordinate_space": "camera_relative_pose_estimate",
+        "calibration_status": "not_available",
+        "metric_3d_status": "not_available",
+        "publication_rule": "Do not label as calibrated, metric, or verified_3d."
+      }
+    },
+    {
+      "player_key": "jaylen_brown",
+      "display_name": "Jaylen Brown",
+      "model_status": "youtube_pose_candidate",
+      "sample_count": 5,
+      "metrics": {
+        "Elbow angle": 159.43,
+        "Shoulder angle": 151.5,
+        "Hip angle": 166.54,
+        "Knee angle": 162.71
+      },
+      "source_url": "https://www.youtube.com/watch?v=zk5j3ZvzjF4",
+      "source_title": "Jaylen Brown Shooting Through Hamstring Tightness at Celtics Practice",
+      "review": {
+        "verdict": "ACCEPT",
+        "player_match": "YES",
+        "real_shot": "YES",
+        "ball_hand_release_visible": "YES",
+        "full_body_visible": "YES",
+        "camera_view": "single",
+        "pose_extraction": "suitable",
+        "evidence": "Jaylen Brown is seen taking multiple jump shots from a side/three-quarter view. The camera is static, and his full body, including the ball and release point, is clearly visible throughout the shooting motion."
+      },
+      "model_boundary": {
+        "model_kind": "single_view_youtube_3d_pose_estimate",
+        "coordinate_space": "camera_relative_pose_estimate",
+        "calibration_status": "not_available",
+        "metric_3d_status": "not_available",
+        "publication_rule": "Do not label as calibrated, metric, or verified_3d."
+      }
+    },
+    {
+      "player_key": "kawhi_leonard",
+      "display_name": "Kawhi Leonard",
+      "model_status": "youtube_pose_candidate",
+      "sample_count": 5,
+      "metrics": {
+        "Elbow angle": 151.815,
+        "Shoulder angle": 132.36,
+        "Hip angle": 168.1,
+        "Knee angle": 160.18
+      },
+      "source_url": "https://www.youtube.com/watch?v=e8bawfcsTx0",
+      "source_title": "Kawhi Leonard  Free throws attempted",
+      "review": {
+        "verdict": "ACCEPT",
+        "player_match": "YES",
+        "real_shot": "YES",
+        "ball_hand_release_visible": "YES",
+        "full_body_visible": "YES",
+        "camera_view": "single",
+        "pose_extraction": "suitable",
+        "evidence": "The video features several clear, full-body shots of Kawhi Leonard performing free throws during a game, with the release of the ball clearly visible from a single camera angle."
+      },
+      "model_boundary": {
+        "model_kind": "single_view_youtube_3d_pose_estimate",
+        "coordinate_space": "camera_relative_pose_estimate",
+        "calibration_status": "not_available",
+        "metric_3d_status": "not_available",
+        "publication_rule": "Do not label as calibrated, metric, or verified_3d."
+      }
+    },
+    {
+      "player_key": "norman_powell",
+      "display_name": "Norman Powell",
+      "model_status": "youtube_pose_candidate",
+      "sample_count": 3,
+      "metrics": {
+        "Elbow angle": 137.69,
+        "Shoulder angle": 136.09,
+        "Hip angle": 158.42,
+        "Knee angle": 165.78
+      },
+      "source_url": "https://www.youtube.com/watch?v=VeNKn-X82hw",
+      "source_title": "Norm Powell Shooting Breakdown",
+      "review": {
+        "verdict": "ACCEPT",
+        "player_match": "YES",
+        "real_shot": "YES",
+        "ball_hand_release_visible": "YES",
+        "full_body_visible": "YES",
+        "camera_view": "multiple_unsynchronized",
+        "pose_extraction": "suitable",
+        "evidence": "Slow-motion, full-body shots of Norman Powell from front, side, and rear angles with clear ball release visibility."
+      },
+      "model_boundary": {
+        "model_kind": "single_view_youtube_3d_pose_estimate",
+        "coordinate_space": "camera_relative_pose_estimate",
+        "calibration_status": "not_available",
+        "metric_3d_status": "not_available",
+        "publication_rule": "Do not label as calibrated, metric, or verified_3d."
+      }
+    },
+    {
+      "player_key": "deaaron_fox",
+      "display_name": "De'Aaron Fox",
+      "model_status": "youtube_pose_candidate",
+      "sample_count": 3,
+      "metrics": {
+        "Elbow angle": 139.23,
+        "Shoulder angle": 117.4,
+        "Hip angle": 172.15,
+        "Knee angle": 156.9
+      },
+      "source_url": "https://www.youtube.com/watch?v=6E4tK2F-snI",
+      "source_title": "De'Aaron Fox Shooting Form Slow Motion 2023 (1080_HD) Part 1",
+      "review": {
+        "verdict": "ACCEPT",
+        "player_match": "YES",
+        "real_shot": "YES",
+        "ball_hand_release_visible": "YES",
+        "full_body_visible": "YES",
+        "camera_view": "multiple_unsynchronized",
+        "pose_extraction": "suitable",
+        "evidence": "The video is a compilation of De'Aaron Fox (#5, Sacramento Kings) taking various jump shots during NBA games. Most segments provide a clear, full-body view of his shooting motion, including the release point, from standard broadcast angles."
+      },
+      "model_boundary": {
+        "model_kind": "single_view_youtube_3d_pose_estimate",
+        "coordinate_space": "camera_relative_pose_estimate",
+        "calibration_status": "not_available",
+        "metric_3d_status": "not_available",
+        "publication_rule": "Do not label as calibrated, metric, or verified_3d."
+      }
+    },
+    {
+      "player_key": "shai_gilgeous_alexander",
+      "display_name": "Shai Gilgeous-Alexander",
+      "model_status": "youtube_pose_candidate",
+      "sample_count": 3,
+      "metrics": {
+        "Elbow angle": 145.82,
+        "Shoulder angle": 119.9,
+        "Hip angle": 153.42,
+        "Knee angle": 165.9
+      },
+      "source_url": "https://www.youtube.com/watch?v=OCdzsQLHfXs",
+      "source_title": "Shai Gilgeous-Alexander Shooting Form Slow Motion (1080_HD)",
+      "review": {
+        "verdict": "ACCEPT",
+        "player_match": "YES",
+        "real_shot": "YES",
+        "ball_hand_release_visible": "YES",
+        "full_body_visible": "YES",
+        "camera_view": "single",
+        "pose_extraction": "suitable",
+        "evidence": "The video contains several high-quality, slow-motion replays of Shai Gilgeous-Alexander's jump shot from various single-camera perspectives, consistently showing his full body and the ball's release."
+      },
+      "model_boundary": {
+        "model_kind": "single_view_youtube_3d_pose_estimate",
+        "coordinate_space": "camera_relative_pose_estimate",
+        "calibration_status": "not_available",
+        "metric_3d_status": "not_available",
+        "publication_rule": "Do not label as calibrated, metric, or verified_3d."
+      }
+    },
+    {
+      "player_key": "lebron_james",
+      "display_name": "LeBron James",
+      "model_status": "youtube_pose_candidate",
+      "sample_count": 5,
+      "metrics": {
+        "Elbow angle": 135.38,
+        "Shoulder angle": 124.96,
+        "Hip angle": 160.6,
+        "Knee angle": 145.51
+      },
+      "source_url": "https://www.youtube.com/watch?v=8Docgqljzso",
+      "source_title": "Lebron James Slow Motion Shooting Form 👑",
+      "review": {
+        "verdict": "ACCEPT",
+        "player_match": "YES",
+        "real_shot": "YES",
+        "ball_hand_release_visible": "YES",
+        "full_body_visible": "YES",
+        "camera_view": "single",
+        "pose_extraction": "suitable",
+        "evidence": "The video features several clear, unobstructed sequences of LeBron James performing full basketball shots. In multiple instances, such as at 0:17, 0:31, and 1:22, his entire body and the release of the ball are clearly visible from a single, stable camera angle, making it highly suitable for pose extraction."
+      },
+      "model_boundary": {
+        "model_kind": "single_view_youtube_3d_pose_estimate",
+        "coordinate_space": "camera_relative_pose_estimate",
+        "calibration_status": "not_available",
+        "metric_3d_status": "not_available",
+        "publication_rule": "Do not label as calibrated, metric, or verified_3d."
+      }
+    },
+    {
+      "player_key": "victor_wembanyama",
+      "display_name": "Victor Wembanyama",
+      "model_status": "youtube_pose_candidate",
+      "sample_count": 3,
+      "metrics": {
+        "Elbow angle": 137.315,
+        "Shoulder angle": 115.16999999999999,
+        "Hip angle": 145.335,
+        "Knee angle": 146.67000000000002
+      },
+      "source_url": "https://www.youtube.com/watch?v=-V6aCvcRfNA",
+      "source_title": "Victor Wembanyama's Pregame Shooting Routine",
+      "review": {
+        "verdict": "ACCEPT",
+        "player_match": "YES",
+        "real_shot": "YES",
+        "ball_hand_release_visible": "YES",
+        "full_body_visible": "YES",
+        "camera_view": "multiple_unsynchronized",
+        "pose_extraction": "suitable",
+        "evidence": "The video shows numerous clear, full-body clips of Victor Wembanyama practicing basketball shots from various angles, with the ball release clearly visible."
+      },
+      "model_boundary": {
+        "model_kind": "single_view_youtube_3d_pose_estimate",
+        "coordinate_space": "camera_relative_pose_estimate",
+        "calibration_status": "not_available",
+        "metric_3d_status": "not_available",
+        "publication_rule": "Do not label as calibrated, metric, or verified_3d."
+      }
+    }
+  ]
+}

@@ -8,6 +8,10 @@ This protocol covers the original 16-player roster: Stephen Curry, Devin Booker,
 
 The legacy profiles contain 60 unique source URLs across the 16 players. All 16 remain `blocked_unverified`: none has human identity/shot review, source-license status, ball-hand separation evidence, two calibrated camera views, or a passing canonical 3D validation. A legacy pose profile must not be relabeled as a completed player-specific 3D model.
 
+## YouTube pose-candidate layer
+
+The 16-player roster has a separate `models/youtube_single_view_pose_profiles.json` layer. Each profile retains a reviewed public YouTube candidate and its camera-relative pose metrics. It is an explicit `single_view_youtube_3d_pose_estimate`, not a calibrated metric 3D reconstruction. The model boundary is preserved in every profile: `calibration_status=not_available` and `metric_3d_status=not_available`. This layer is suitable for comparing visible shooting mechanics, while the completion gate below remains required for any verified 3D claim.
+
 ## Review queue
 
 Generate the queue from the legacy source metadata:

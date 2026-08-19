@@ -13,7 +13,29 @@
       "source": "youtube_self_measured",
       "primary_view": "side",
       "player_key": "stephen_curry",
-      "profile_version": "motion_v2"
+      "profile_version": "motion_v2",
+      "model_kind": "single_view_youtube_3d_pose_estimate",
+      "model_status": "youtube_pose_candidate",
+      "model_boundary": {
+        "model_kind": "single_view_youtube_3d_pose_estimate",
+        "coordinate_space": "camera_relative_pose_estimate",
+        "calibration_status": "not_available",
+        "metric_3d_status": "not_available",
+        "publication_rule": "Do not label as calibrated, metric, or verified_3d."
+      },
+      "youtube_review": {
+        "source_url": "https://www.youtube.com/watch?v=fG0yA9oBOkg",
+        "source_title": "Stephen Curry shooting form slow motion",
+        "review_file": "artifacts/youtube_visual_reviews/stephen_curry.md",
+        "verdict": "ACCEPT",
+        "player_match": "YES",
+        "real_shot": "YES",
+        "ball_hand_release_visible": "YES",
+        "full_body_visible": "YES",
+        "camera_view": "single",
+        "pose_extraction": "suitable",
+        "evidence": "The video shows multiple clear, full-body shots of Stephen Curry shooting from a single, stable camera angle, with the release point clearly visible in each shot."
+      }
     },
     "views": {
       "side": {
@@ -20403,7 +20425,29 @@
       "source": "youtube_self_measured",
       "primary_view": "side",
       "player_key": "devin_booker",
-      "profile_version": "motion_v2"
+      "profile_version": "motion_v2",
+      "model_kind": "single_view_youtube_3d_pose_estimate",
+      "model_status": "youtube_pose_candidate",
+      "model_boundary": {
+        "model_kind": "single_view_youtube_3d_pose_estimate",
+        "coordinate_space": "camera_relative_pose_estimate",
+        "calibration_status": "not_available",
+        "metric_3d_status": "not_available",
+        "publication_rule": "Do not label as calibrated, metric, or verified_3d."
+      },
+      "youtube_review": {
+        "source_url": "https://www.youtube.com/watch?v=JGRnvtZLTgQ",
+        "source_title": "Devin Booker Shooting Form Slow Motion 2021-2022 (1080_HD)",
+        "review_file": "artifacts/youtube_visual_reviews/devin_booker.md",
+        "verdict": "ACCEPT",
+        "player_match": "YES",
+        "real_shot": "YES",
+        "ball_hand_release_visible": "YES",
+        "full_body_visible": "YES",
+        "camera_view": "multiple_unsynchronized",
+        "pose_extraction": "suitable",
+        "evidence": "This video is a high-quality compilation of Devin Booker's jump shots from various single-view angles. Many clips include slow-motion segments that clearly capture his full body and the moment of ball release, making it an excellent source for pose profiling."
+      }
     },
     "views": {
       "side": {
@@ -40663,7 +40707,29 @@
       "source": "youtube_self_measured",
       "primary_view": "side",
       "player_key": "kevin_durant",
-      "profile_version": "motion_v2"
+      "profile_version": "motion_v2",
+      "model_kind": "single_view_youtube_3d_pose_estimate",
+      "model_status": "youtube_pose_candidate",
+      "model_boundary": {
+        "model_kind": "single_view_youtube_3d_pose_estimate",
+        "coordinate_space": "camera_relative_pose_estimate",
+        "calibration_status": "not_available",
+        "metric_3d_status": "not_available",
+        "publication_rule": "Do not label as calibrated, metric, or verified_3d."
+      },
+      "youtube_review": {
+        "source_url": "https://www.youtube.com/watch?v=Ug8quL88nRs",
+        "source_title": "Kevin Durant Crosses Up Andre Iguodala in Slow Motion",
+        "review_file": "artifacts/youtube_visual_reviews/kevin_durant.md",
+        "verdict": "ACCEPT",
+        "player_match": "YES",
+        "real_shot": "YES",
+        "ball_hand_release_visible": "YES",
+        "full_body_visible": "YES",
+        "camera_view": "single",
+        "pose_extraction": "suitable",
+        "evidence": "The video provides a clear, continuous view of Kevin Durant performing a jump shot, with his full body and the ball release clearly visible from a single camera perspective."
+      }
     },
     "views": {
       "oblique": {
@@ -70888,7 +70954,29 @@
       "source": "youtube_self_measured",
       "primary_view": "side",
       "player_key": "donovan_mitchell",
-      "profile_version": "motion_v2"
+      "profile_version": "motion_v2",
+      "model_kind": "single_view_youtube_3d_pose_estimate",
+      "model_status": "youtube_pose_candidate",
+      "model_boundary": {
+        "model_kind": "single_view_youtube_3d_pose_estimate",
+        "coordinate_space": "camera_relative_pose_estimate",
+        "calibration_status": "not_available",
+        "metric_3d_status": "not_available",
+        "publication_rule": "Do not label as calibrated, metric, or verified_3d."
+      },
+      "youtube_review": {
+        "source_url": "https://www.youtube.com/watch?v=FNl48HFXgLQ",
+        "source_title": "Donovan Mitchell Shooting Form Slow Motion (1080_HD)",
+        "review_file": "artifacts/youtube_visual_reviews/donovan_mitchell.md",
+        "verdict": "ACCEPT",
+        "player_match": "YES",
+        "real_shot": "YES",
+        "ball_hand_release_visible": "YES",
+        "full_body_visible": "YES",
+        "camera_view": "multiple_unsynchronized",
+        "pose_extraction": "suitable",
+        "evidence": "The video is a compilation of Donovan Mitchell (#45) shooting 3-pointers from various angles (front, side, back). Each shot is captured in a single, continuous camera view, often followed by a slow-motion replay that clearly shows the full body, ball, and hand release."
+      }
     },
     "views": {
       "side": {
@@ -70981,7 +71069,7 @@
               "hip": 167.28,
               "knee": 155.95
             },
-            "title": "Donovan Mitchell Shooting Breakdown \ud83c\udfc0 How to Shoot Like Donovan Mitchell!",
+            "title": "Donovan Mitchell Shooting Breakdown 🏀 How to Shoot Like Donovan Mitchell!",
             "duration": 166.0,
             "uploader": "Jayse ",
             "query": "Donovan Mitchell shooting form slow motion",
@@ -81101,7 +81189,7 @@
               "hip": 167.28,
               "knee": 155.95
             },
-            "title": "Donovan Mitchell Shooting Breakdown \ud83c\udfc0 How to Shoot Like Donovan Mitchell!",
+            "title": "Donovan Mitchell Shooting Breakdown 🏀 How to Shoot Like Donovan Mitchell!",
             "duration": 166.0,
             "uploader": "Jayse ",
             "query": "Donovan Mitchell shooting form slow motion",
@@ -91148,7 +91236,29 @@
       "source": "youtube_self_measured",
       "primary_view": "side",
       "player_key": "anthony_edwards",
-      "profile_version": "motion_v2"
+      "profile_version": "motion_v2",
+      "model_kind": "single_view_youtube_3d_pose_estimate",
+      "model_status": "youtube_pose_candidate",
+      "model_boundary": {
+        "model_kind": "single_view_youtube_3d_pose_estimate",
+        "coordinate_space": "camera_relative_pose_estimate",
+        "calibration_status": "not_available",
+        "metric_3d_status": "not_available",
+        "publication_rule": "Do not label as calibrated, metric, or verified_3d."
+      },
+      "youtube_review": {
+        "source_url": "https://www.youtube.com/watch?v=AF2AlZ5HZzw",
+        "source_title": "Anthony Edwards Shooting Form Slow Motion 2022 (1080_HD) Part 1",
+        "review_file": "artifacts/youtube_visual_reviews/anthony_edwards_candidate_2.md",
+        "verdict": "ACCEPT",
+        "player_match": "YES",
+        "real_shot": "YES",
+        "ball_hand_release_visible": "YES",
+        "full_body_visible": "YES",
+        "camera_view": "multiple_unsynchronized",
+        "pose_extraction": "suitable",
+        "evidence": "The video is a compilation of several high-quality, full-body shooting clips of Anthony Edwards, including free throws and jump shots, with clear views of his release hand and overall form."
+      }
     },
     "views": {
       "side": {
@@ -111548,7 +111658,29 @@
       "source": "youtube_self_measured",
       "primary_view": "side",
       "player_key": "tyrese_maxey",
-      "profile_version": "motion_v2"
+      "profile_version": "motion_v2",
+      "model_kind": "single_view_youtube_3d_pose_estimate",
+      "model_status": "youtube_pose_candidate",
+      "model_boundary": {
+        "model_kind": "single_view_youtube_3d_pose_estimate",
+        "coordinate_space": "camera_relative_pose_estimate",
+        "calibration_status": "not_available",
+        "metric_3d_status": "not_available",
+        "publication_rule": "Do not label as calibrated, metric, or verified_3d."
+      },
+      "youtube_review": {
+        "source_url": "https://www.youtube.com/watch?v=GPUtArsmlwk",
+        "source_title": "How To Shoot Like Tyrese Maxey  ( 3 Jumpshot  Hacks )",
+        "review_file": "artifacts/youtube_visual_reviews/tyrese_maxey.md",
+        "verdict": "ACCEPT",
+        "player_match": "YES",
+        "real_shot": "YES",
+        "ball_hand_release_visible": "YES",
+        "full_body_visible": "YES",
+        "camera_view": "multiple_unsynchronized",
+        "pose_extraction": "suitable",
+        "evidence": "The video contains numerous clear, full-body game clips of Tyrese Maxey shooting from various angles (e.g., 0:32, 1:11, 1:44, 2:17), showing the entire motion from load to release."
+      }
     },
     "views": {
       "oblique": {
@@ -141759,7 +141891,7 @@
       }
     }
   },
-  "Luka Don\u010di\u0107": {
+  "Luka Dončić": {
     "sample_count": 3,
     "metrics": {
       "Elbow angle": 139.8,
@@ -141773,7 +141905,29 @@
       "source": "youtube_self_measured",
       "primary_view": "side",
       "player_key": "luka_don_i",
-      "profile_version": "motion_v2"
+      "profile_version": "motion_v2",
+      "model_kind": "single_view_youtube_3d_pose_estimate",
+      "model_status": "youtube_pose_candidate",
+      "model_boundary": {
+        "model_kind": "single_view_youtube_3d_pose_estimate",
+        "coordinate_space": "camera_relative_pose_estimate",
+        "calibration_status": "not_available",
+        "metric_3d_status": "not_available",
+        "publication_rule": "Do not label as calibrated, metric, or verified_3d."
+      },
+      "youtube_review": {
+        "source_url": "https://www.youtube.com/watch?v=3sT9Xf_rsyM",
+        "source_title": "Luka Doncic Shooting Form Slow Motion 2021-2022 (1080_HD) Part 1",
+        "review_file": "artifacts/youtube_visual_reviews/luka_don_i.md",
+        "verdict": "ACCEPT",
+        "player_match": "YES",
+        "real_shot": "YES",
+        "ball_hand_release_visible": "YES",
+        "full_body_visible": "YES",
+        "camera_view": "multiple_unsynchronized",
+        "pose_extraction": "suitable",
+        "evidence": "The video features several high-quality, slow-motion clips of Luka Dončić performing jump shots in both game and practice settings. In these clips, his entire body is visible from the start of the shooting motion through the release, providing a clear view of his mechanics."
+      }
     },
     "views": {
       "side": {
@@ -162033,7 +162187,29 @@
       "source": "youtube_self_measured",
       "primary_view": "side",
       "player_key": "jamal_murray",
-      "profile_version": "motion_v2"
+      "profile_version": "motion_v2",
+      "model_kind": "single_view_youtube_3d_pose_estimate",
+      "model_status": "youtube_pose_candidate",
+      "model_boundary": {
+        "model_kind": "single_view_youtube_3d_pose_estimate",
+        "coordinate_space": "camera_relative_pose_estimate",
+        "calibration_status": "not_available",
+        "metric_3d_status": "not_available",
+        "publication_rule": "Do not label as calibrated, metric, or verified_3d."
+      },
+      "youtube_review": {
+        "source_url": "https://www.youtube.com/watch?v=OhzAd-4ZE3M",
+        "source_title": "Jamal Murray Shooting Form Slow Motion (1080_HD)",
+        "review_file": "artifacts/youtube_visual_reviews/jamal_murray.md",
+        "verdict": "ACCEPT",
+        "player_match": "YES",
+        "real_shot": "YES",
+        "ball_hand_release_visible": "YES",
+        "full_body_visible": "YES",
+        "camera_view": "multiple_unsynchronized",
+        "pose_extraction": "suitable",
+        "evidence": "The video is a compilation of Jamal Murray's jump shots from various NBA games. Numerous clips (e.g., at 0:38, 1:03, 1:40, and 2:03) provide clear, single-view footage of his entire body from feet to release point, making it an excellent source for pose extraction."
+      }
     },
     "views": {
       "oblique": {
@@ -172175,7 +172351,7 @@
             },
             "title": "NBA 2K23 MOST REALISTIC JAMAL MURRAY JUMPSHOT FIX IN 2K HISTORY",
             "duration": 798.0,
-            "uploader": "2K Jumpshot Fix Goat \ud83d\udc10",
+            "uploader": "2K Jumpshot Fix Goat 🐐",
             "query": "Jamal Murray jump shot slow motion side view",
             "metadata_score": 68.0,
             "person_index": 0,
@@ -182295,7 +182471,7 @@
             },
             "title": "NBA 2K23 MOST REALISTIC JAMAL MURRAY JUMPSHOT FIX IN 2K HISTORY",
             "duration": 798.0,
-            "uploader": "2K Jumpshot Fix Goat \ud83d\udc10",
+            "uploader": "2K Jumpshot Fix Goat 🐐",
             "query": "Jamal Murray jump shot slow motion side view",
             "metadata_score": 68.0,
             "person_index": 0,
@@ -192340,7 +192516,29 @@
       "source": "youtube_self_measured",
       "primary_view": "side",
       "player_key": "jalen_brunson",
-      "profile_version": "motion_v2"
+      "profile_version": "motion_v2",
+      "model_kind": "single_view_youtube_3d_pose_estimate",
+      "model_status": "youtube_pose_candidate",
+      "model_boundary": {
+        "model_kind": "single_view_youtube_3d_pose_estimate",
+        "coordinate_space": "camera_relative_pose_estimate",
+        "calibration_status": "not_available",
+        "metric_3d_status": "not_available",
+        "publication_rule": "Do not label as calibrated, metric, or verified_3d."
+      },
+      "youtube_review": {
+        "source_url": "https://www.youtube.com/watch?v=mY-fwLGor1Y",
+        "source_title": "Jalen Brunson Jumpshot Fix (3 Options) | NBA 2K20 Mobile",
+        "review_file": "artifacts/youtube_visual_reviews/jalen_brunson.md",
+        "verdict": "ACCEPT",
+        "player_match": "YES",
+        "real_shot": "YES",
+        "ball_hand_release_visible": "YES",
+        "full_body_visible": "YES",
+        "camera_view": "multiple_unsynchronized",
+        "pose_extraction": "suitable",
+        "evidence": "The video provides side-by-side comparisons of Jalen Brunson's real-life shooting form with his NBA 2K animation, clearly displaying the full body and ball release from consistent angles."
+      }
     },
     "views": {
       "side": {
@@ -212670,7 +212868,29 @@
       "source": "youtube_self_measured",
       "primary_view": "side",
       "player_key": "jaylen_brown",
-      "profile_version": "motion_v2"
+      "profile_version": "motion_v2",
+      "model_kind": "single_view_youtube_3d_pose_estimate",
+      "model_status": "youtube_pose_candidate",
+      "model_boundary": {
+        "model_kind": "single_view_youtube_3d_pose_estimate",
+        "coordinate_space": "camera_relative_pose_estimate",
+        "calibration_status": "not_available",
+        "metric_3d_status": "not_available",
+        "publication_rule": "Do not label as calibrated, metric, or verified_3d."
+      },
+      "youtube_review": {
+        "source_url": "https://www.youtube.com/watch?v=zk5j3ZvzjF4",
+        "source_title": "Jaylen Brown Shooting Through Hamstring Tightness at Celtics Practice",
+        "review_file": "artifacts/youtube_visual_reviews/jaylen_brown.md",
+        "verdict": "ACCEPT",
+        "player_match": "YES",
+        "real_shot": "YES",
+        "ball_hand_release_visible": "YES",
+        "full_body_visible": "YES",
+        "camera_view": "single",
+        "pose_extraction": "suitable",
+        "evidence": "Jaylen Brown is seen taking multiple jump shots from a side/three-quarter view. The camera is static, and his full body, including the ball and release point, is clearly visible throughout the shooting motion."
+      }
     },
     "views": {
       "side": {
@@ -233070,7 +233290,29 @@
       "source": "youtube_self_measured",
       "primary_view": "side",
       "player_key": "kawhi_leonard",
-      "profile_version": "motion_v2"
+      "profile_version": "motion_v2",
+      "model_kind": "single_view_youtube_3d_pose_estimate",
+      "model_status": "youtube_pose_candidate",
+      "model_boundary": {
+        "model_kind": "single_view_youtube_3d_pose_estimate",
+        "coordinate_space": "camera_relative_pose_estimate",
+        "calibration_status": "not_available",
+        "metric_3d_status": "not_available",
+        "publication_rule": "Do not label as calibrated, metric, or verified_3d."
+      },
+      "youtube_review": {
+        "source_url": "https://www.youtube.com/watch?v=e8bawfcsTx0",
+        "source_title": "Kawhi Leonard  Free throws attempted",
+        "review_file": "artifacts/youtube_visual_reviews/kawhi_leonard.md",
+        "verdict": "ACCEPT",
+        "player_match": "YES",
+        "real_shot": "YES",
+        "ball_hand_release_visible": "YES",
+        "full_body_visible": "YES",
+        "camera_view": "single",
+        "pose_extraction": "suitable",
+        "evidence": "The video features several clear, full-body shots of Kawhi Leonard performing free throws during a game, with the release of the ball clearly visible from a single camera angle."
+      }
     },
     "views": {
       "oblique": {
@@ -243212,7 +243454,7 @@
             },
             "title": "Kawhi Leonard  Free throws attempted",
             "duration": 61.0,
-            "uploader": "Murat \u00d6zyer",
+            "uploader": "Murat Özyer",
             "query": "Kawhi Leonard free throw slow motion",
             "metadata_score": 76.0,
             "person_index": 0,
@@ -253367,7 +253609,7 @@
             },
             "title": "Kawhi Leonard  Free throws attempted",
             "duration": 61.0,
-            "uploader": "Murat \u00d6zyer",
+            "uploader": "Murat Özyer",
             "query": "Kawhi Leonard free throw slow motion",
             "metadata_score": 76.0,
             "person_index": 0,
@@ -263447,7 +263689,29 @@
       "source": "youtube_self_measured",
       "primary_view": "side",
       "player_key": "norman_powell",
-      "profile_version": "motion_v2"
+      "profile_version": "motion_v2",
+      "model_kind": "single_view_youtube_3d_pose_estimate",
+      "model_status": "youtube_pose_candidate",
+      "model_boundary": {
+        "model_kind": "single_view_youtube_3d_pose_estimate",
+        "coordinate_space": "camera_relative_pose_estimate",
+        "calibration_status": "not_available",
+        "metric_3d_status": "not_available",
+        "publication_rule": "Do not label as calibrated, metric, or verified_3d."
+      },
+      "youtube_review": {
+        "source_url": "https://www.youtube.com/watch?v=VeNKn-X82hw",
+        "source_title": "Norm Powell Shooting Breakdown",
+        "review_file": "artifacts/youtube_visual_reviews/norman_powell.md",
+        "verdict": "ACCEPT",
+        "player_match": "YES",
+        "real_shot": "YES",
+        "ball_hand_release_visible": "YES",
+        "full_body_visible": "YES",
+        "camera_view": "multiple_unsynchronized",
+        "pose_extraction": "suitable",
+        "evidence": "Slow-motion, full-body shots of Norman Powell from front, side, and rear angles with clear ball release visibility."
+      }
     },
     "views": {
       "side": {
@@ -263505,7 +263769,7 @@
               "hip": 150.14,
               "knee": 163.97
             },
-            "title": "Norman Powell Jumpshot FIX in NBA 2K25 \u2013 Perfect Green Release Every Time",
+            "title": "Norman Powell Jumpshot FIX in NBA 2K25 – Perfect Green Release Every Time",
             "duration": 105.0,
             "uploader": "NBA 2K Jumpshots",
             "query": "Norman Powell shooting mechanics breakdown",
@@ -273625,7 +273889,7 @@
               "hip": 150.14,
               "knee": 163.97
             },
-            "title": "Norman Powell Jumpshot FIX in NBA 2K25 \u2013 Perfect Green Release Every Time",
+            "title": "Norman Powell Jumpshot FIX in NBA 2K25 – Perfect Green Release Every Time",
             "duration": 105.0,
             "uploader": "NBA 2K Jumpshots",
             "query": "Norman Powell shooting mechanics breakdown",
@@ -283707,7 +283971,29 @@
       "source": "youtube_self_measured",
       "primary_view": "side",
       "player_key": "deaaron_fox",
-      "profile_version": "motion_v2"
+      "profile_version": "motion_v2",
+      "model_kind": "single_view_youtube_3d_pose_estimate",
+      "model_status": "youtube_pose_candidate",
+      "model_boundary": {
+        "model_kind": "single_view_youtube_3d_pose_estimate",
+        "coordinate_space": "camera_relative_pose_estimate",
+        "calibration_status": "not_available",
+        "metric_3d_status": "not_available",
+        "publication_rule": "Do not label as calibrated, metric, or verified_3d."
+      },
+      "youtube_review": {
+        "source_url": "https://www.youtube.com/watch?v=6E4tK2F-snI",
+        "source_title": "De'Aaron Fox Shooting Form Slow Motion 2023 (1080_HD) Part 1",
+        "review_file": "artifacts/youtube_visual_reviews/deaaron_fox.md",
+        "verdict": "ACCEPT",
+        "player_match": "YES",
+        "real_shot": "YES",
+        "ball_hand_release_visible": "YES",
+        "full_body_visible": "YES",
+        "camera_view": "multiple_unsynchronized",
+        "pose_extraction": "suitable",
+        "evidence": "The video is a compilation of De'Aaron Fox (#5, Sacramento Kings) taking various jump shots during NBA games. Most segments provide a clear, full-body view of his shooting motion, including the release point, from standard broadcast angles."
+      }
     },
     "views": {
       "side": {
@@ -303967,7 +304253,29 @@
       "source": "youtube_self_measured",
       "primary_view": "side",
       "player_key": "shai_gilgeous_alexander",
-      "profile_version": "motion_v2"
+      "profile_version": "motion_v2",
+      "model_kind": "single_view_youtube_3d_pose_estimate",
+      "model_status": "youtube_pose_candidate",
+      "model_boundary": {
+        "model_kind": "single_view_youtube_3d_pose_estimate",
+        "coordinate_space": "camera_relative_pose_estimate",
+        "calibration_status": "not_available",
+        "metric_3d_status": "not_available",
+        "publication_rule": "Do not label as calibrated, metric, or verified_3d."
+      },
+      "youtube_review": {
+        "source_url": "https://www.youtube.com/watch?v=OCdzsQLHfXs",
+        "source_title": "Shai Gilgeous-Alexander Shooting Form Slow Motion (1080_HD)",
+        "review_file": "artifacts/youtube_visual_reviews/shai_gilgeous_alexander.md",
+        "verdict": "ACCEPT",
+        "player_match": "YES",
+        "real_shot": "YES",
+        "ball_hand_release_visible": "YES",
+        "full_body_visible": "YES",
+        "camera_view": "single",
+        "pose_extraction": "suitable",
+        "evidence": "The video contains several high-quality, slow-motion replays of Shai Gilgeous-Alexander's jump shot from various single-camera perspectives, consistently showing his full body and the ball's release."
+      }
     },
     "views": {
       "side": {
@@ -324227,7 +324535,29 @@
       "source": "youtube_self_measured",
       "primary_view": "side",
       "player_key": "lebron_james",
-      "profile_version": "motion_v2"
+      "profile_version": "motion_v2",
+      "model_kind": "single_view_youtube_3d_pose_estimate",
+      "model_status": "youtube_pose_candidate",
+      "model_boundary": {
+        "model_kind": "single_view_youtube_3d_pose_estimate",
+        "coordinate_space": "camera_relative_pose_estimate",
+        "calibration_status": "not_available",
+        "metric_3d_status": "not_available",
+        "publication_rule": "Do not label as calibrated, metric, or verified_3d."
+      },
+      "youtube_review": {
+        "source_url": "https://www.youtube.com/watch?v=8Docgqljzso",
+        "source_title": "Lebron James Slow Motion Shooting Form 👑",
+        "review_file": "artifacts/youtube_visual_reviews/lebron_james.md",
+        "verdict": "ACCEPT",
+        "player_match": "YES",
+        "real_shot": "YES",
+        "ball_hand_release_visible": "YES",
+        "full_body_visible": "YES",
+        "camera_view": "single",
+        "pose_extraction": "suitable",
+        "evidence": "The video features several clear, unobstructed sequences of LeBron James performing full basketball shots. In multiple instances, such as at 0:17, 0:31, and 1:22, his entire body and the release of the ball are clearly visible from a single, stable camera angle, making it highly suitable for pose extraction."
+      }
     },
     "views": {
       "side": {
@@ -324250,7 +324580,7 @@
               "hip": 160.46,
               "knee": 170.9
             },
-            "title": "Lebron James Slow Motion Shooting Form \ud83d\udc51",
+            "title": "Lebron James Slow Motion Shooting Form 👑",
             "duration": 95.0,
             "uploader": "Basketballvideos23",
             "query": "LeBron James shooting form slow motion",
@@ -334440,7 +334770,7 @@
               "hip": 160.46,
               "knee": 170.9
             },
-            "title": "Lebron James Slow Motion Shooting Form \ud83d\udc51",
+            "title": "Lebron James Slow Motion Shooting Form 👑",
             "duration": 95.0,
             "uploader": "Basketballvideos23",
             "query": "LeBron James shooting form slow motion",
@@ -344627,7 +344957,29 @@
       "source": "youtube_self_measured",
       "primary_view": "side",
       "player_key": "victor_wembanyama",
-      "profile_version": "motion_v2"
+      "profile_version": "motion_v2",
+      "model_kind": "single_view_youtube_3d_pose_estimate",
+      "model_status": "youtube_pose_candidate",
+      "model_boundary": {
+        "model_kind": "single_view_youtube_3d_pose_estimate",
+        "coordinate_space": "camera_relative_pose_estimate",
+        "calibration_status": "not_available",
+        "metric_3d_status": "not_available",
+        "publication_rule": "Do not label as calibrated, metric, or verified_3d."
+      },
+      "youtube_review": {
+        "source_url": "https://www.youtube.com/watch?v=-V6aCvcRfNA",
+        "source_title": "Victor Wembanyama's Pregame Shooting Routine",
+        "review_file": "artifacts/youtube_visual_reviews/victor_wembanyama.md",
+        "verdict": "ACCEPT",
+        "player_match": "YES",
+        "real_shot": "YES",
+        "ball_hand_release_visible": "YES",
+        "full_body_visible": "YES",
+        "camera_view": "multiple_unsynchronized",
+        "pose_extraction": "suitable",
+        "evidence": "The video shows numerous clear, full-body clips of Victor Wembanyama practicing basketball shots from various angles, with the ball release clearly visible."
+      }
     },
     "views": {
       "oblique": {
@@ -354697,9 +355049,9 @@
               "hip": 130.9,
               "knee": 152.03
             },
-            "title": "\u30a6\u30a7\u30f3\u30d0\u30f3\u30e4\u30de\u306e\u30b7\u30e5\u30fc\u30c8\u306f\u5b87\u5b99\u7d1a!? \u30b7\u30e5\u30fc\u30c8\u30d5\u30a9\u30fc\u30e0\u89e3\u8aac Victor Wembanyama Shooting Form Breakdown",
+            "title": "ウェンバンヤマのシュートは宇宙級!? シュートフォーム解説 Victor Wembanyama Shooting Form Breakdown",
             "duration": 204.0,
-            "uploader": "\u8cab\u6d41\u7c60\u7403 \u304d\u3087\u30fc",
+            "uploader": "貫流籠球 きょー",
             "query": "Victor Wembanyama shooting mechanics breakdown",
             "metadata_score": 84.0,
             "person_index": 0,
@@ -364776,9 +365128,9 @@
               "hip": 130.9,
               "knee": 152.03
             },
-            "title": "\u30a6\u30a7\u30f3\u30d0\u30f3\u30e4\u30de\u306e\u30b7\u30e5\u30fc\u30c8\u306f\u5b87\u5b99\u7d1a!? \u30b7\u30e5\u30fc\u30c8\u30d5\u30a9\u30fc\u30e0\u89e3\u8aac Victor Wembanyama Shooting Form Breakdown",
+            "title": "ウェンバンヤマのシュートは宇宙級!? シュートフォーム解説 Victor Wembanyama Shooting Form Breakdown",
             "duration": 204.0,
-            "uploader": "\u8cab\u6d41\u7c60\u7403 \u304d\u3087\u30fc",
+            "uploader": "貫流籠球 きょー",
             "query": "Victor Wembanyama shooting mechanics breakdown",
             "metadata_score": 84.0,
             "person_index": 0,

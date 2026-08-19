@@ -1,0 +1,21 @@
+[
+  {
+    "player": "Anthony Edwards",
+    "player_key": "anthony_edwards",
+    "source_url": "https://www.youtube.com/watch?v=4CeK9ZHenAo",
+    "source_title": "Edwards slow-motion jumper",
+    "legacy_pose_quality": {
+      "score": 86.22,
+      "valid": true,
+      "reason": "ok",
+      "coverage": 1.0,
+      "mean_visibility": 0.802,
+      "max_frame_gap": 1,
+      "p95_angular_speed_deg_s": 438.5,
+      "p95_pose_speed_torso_s": 13.89,
+      "duration_sec": 2.033
+    },
+    "return_code": 0,
+    "review_file": "artifacts/youtube_visual_reviews/anthony_edwards_candidate_4.md"
+  }
+]
