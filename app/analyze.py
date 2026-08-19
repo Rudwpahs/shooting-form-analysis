@@ -11,9 +11,17 @@ import cv2
 import numpy as np
 
 from .angles import AngleSnapshot, angles_from_landmarks, angles_plausible, median_angles
-from .multiview3d import merge_multiview_release
+from .calibration import CalibrationBundle
 from .motion import normalize_landmarks, smooth_timeline, timeline_quality as evaluate_timeline_quality
 from .pose import PoseCandidate, close_detector, create_pose_detector
+from .shot_event import (
+    detect_basketball,
+    link_ball_track,
+    shooter_track_quality,
+    verify_shot_event,
+)
+from .sync import validate_sync_payload
+from .verified_multiview import triangulate_release
 from .shot_span import (
     ShotSpan,
     detect_shot_span,
@@ -51,6 +59,8 @@ class ViewAnalysis:
     followthrough_frame_index: int = -1
     release_landmarks: List[dict] = field(default_factory=list)
     motion_quality: Dict[str, object] = field(default_factory=dict)
+    shot_event: Dict[str, object] = field(default_factory=dict)
+    shooter_track: Dict[str, object] = field(default_factory=dict)
     raw_timeline: List[dict] = field(default_factory=list, repr=False)
     error: str = ""
 
@@ -91,6 +101,7 @@ class SessionAnalysis:
     views: List[ViewAnalysis]
     person_index: int
     release_angles_merged: Dict[str, float]
+    reconstruction_quality: Dict[str, object] = field(default_factory=dict)
     error: str = ""
 
     def to_dict(self) -> dict:
@@ -98,6 +109,7 @@ class SessionAnalysis:
             "person_index": self.person_index,
             "release_angles_merged": self.release_angles_merged,
             "views": [v.to_dict() for v in self.views],
+            "reconstruction_quality": self.reconstruction_quality,
             "error": self.error,
         }
 
@@ -180,6 +192,14 @@ def _wrist_image_y(pose: PoseCandidate, hand: str) -> float:
     if idx >= len(lms):
         return float("inf")
     return float(lms[idx].y)
+
+
+def _wrist_image_position(pose: PoseCandidate, hand: str) -> tuple[float, float] | None:
+    idx = 15 if hand == "left" else 16
+    lms = pose.image_landmarks
+    if idx >= len(lms):
+        return None
+    return float(lms[idx].x), float(lms[idx].y)
 
 
 def list_people_in_video(
@@ -400,6 +420,9 @@ def analyze_view(
         candidates: List[Tuple[float, int, AngleSnapshot, List[dict]]] = []
         sequence: List[Tuple[int, AngleSnapshot, float, List[List[float]]]] = []
         raw_sequence: List[dict] = []
+        ball_observations = []
+        wrist_positions: List[tuple[int, float, float]] = []
+        shooter_bboxes: List[tuple[int, tuple[float, float, float, float]]] = []
         frames_scanned = 0
         after_frames = max(1, int(round(max(after_release_sec, 0.6) * fps)))
         hard_cap = max_frames + after_frames
@@ -413,6 +436,9 @@ def analyze_view(
             if current_frame % frame_stride:
                 continue
             frame = _resize(frame, render_height)
+            ball = detect_basketball(frame, current_frame)
+            if ball is not None:
+                ball_observations.append(ball)
             rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
             poses = detector.detect(rgb)
             pose = _pick_pose(poses, person_index)
@@ -420,6 +446,10 @@ def analyze_view(
                 snap = _angles_for_pose(pose, hand)
                 if snap is not None:
                     wrist_y = _wrist_image_y(pose, snap.hand)
+                    wrist_position = _wrist_image_position(pose, snap.hand)
+                    if wrist_position is not None:
+                        wrist_positions.append((current_frame, wrist_position[0], wrist_position[1]))
+                    shooter_bboxes.append((current_frame, pose.bbox))
                     landmark_payload = _landmarks_payload(pose.image_landmarks)
                     normalized_pose = normalize_landmarks(landmark_payload, hand=snap.hand)
                     candidates.append(
@@ -517,6 +547,18 @@ def analyze_view(
                 key: float(smoothed_release[key])
                 for key in ("elbow", "shoulder", "hip", "knee")
             }
+        ball_track = link_ball_track(ball_observations)
+        track_quality = shooter_track_quality(
+            shooter_bboxes,
+            expected_frames=max(1, len(sequence)),
+        )
+        shot_event = verify_shot_event(
+            release_frame=release_idx,
+            wrist_positions=wrist_positions,
+            ball_track=ball_track,
+            shooter_quality=track_quality,
+            fps=fps,
+        )
         return ViewAnalysis(
             view=view,
             release_frame_index=release_idx,
@@ -532,6 +574,8 @@ def analyze_view(
             followthrough_frame_index=ft_frame,
             release_landmarks=release_lms,
             motion_quality=evaluate_timeline_quality(timeline, fps=fps) if timeline else {},
+            shot_event=shot_event.to_dict(),
+            shooter_track=track_quality.to_dict(),
             raw_timeline=raw_timeline,
         )
     except Exception as exc:
@@ -584,8 +628,10 @@ def analyze_session(
     hand: Optional[str] = None,
     max_frames: int = 240,
     auto_person: bool = False,
+    calibration: Optional[CalibrationBundle] = None,
+    sync_payload: Optional[dict] = None,
 ) -> SessionAnalysis:
-    """Analyze 1–3 videos; merge release with multi-view 3D triangulation when possible."""
+    """Analyze 1–3 videos; only use 3D when calibration and synchronization pass."""
     if auto_person or person_index is None:
         first_path, first_view = videos[0]
         tag = first_view if first_view in VIEW_TAGS else "side"
@@ -609,19 +655,54 @@ def analyze_session(
             )
         )
 
-    # Prefer geometric multi-view 3D when ≥2 tagged cameras have release landmarks.
     landmark_views = {
         v.view: v.release_landmarks
         for v in views
-        if v.release_landmarks and not v.error and v.view in VIEW_TAGS
-    }
-    mv = merge_multiview_release(landmark_views, hand=hand) if len(landmark_views) >= 2 else None
-    if mv is not None:
-        return SessionAnalysis(
-            views=views,
-            person_index=person_index,
-            release_angles_merged=mv.as_dict(),
+        if (
+            v.release_landmarks
+            and not v.error
+            and v.view in VIEW_TAGS
+            and bool((v.shot_event or {}).get("verified"))
         )
+    }
+    required_camera_ids = set(landmark_views)
+    sync_report = validate_sync_payload(
+        sync_payload,
+        required_camera_ids=required_camera_ids,
+    ) if required_camera_ids else {
+        "status": "not_available",
+        "valid": False,
+        "reasons": ["no ball-verified views are available for calibrated 3D"],
+    }
+    if calibration is not None and sync_report.get("valid") and len(landmark_views) >= 2:
+        mv = triangulate_release(landmark_views, calibration, hand=hand)
+        if mv.angles is not None and mv.quality.get("valid"):
+            return SessionAnalysis(
+                views=views,
+                person_index=person_index,
+                release_angles_merged=mv.angles.as_dict(),
+                reconstruction_quality={
+                    "mode": "calibrated_multi_view_3d",
+                    "calibration": calibration.validation_report(),
+                    "synchronization": sync_report,
+                    "triangulation": mv.quality,
+                },
+            )
+        reconstruction_quality = {
+            "mode": "rejected_multi_view_3d",
+            "calibration": calibration.validation_report(),
+            "synchronization": sync_report,
+            "triangulation": mv.quality,
+        }
+    else:
+        reconstruction_quality = {
+            "mode": "pose_only",
+            "calibration": calibration.validation_report() if calibration is not None else {
+                "status": "not_provided", "valid": False, "reasons": ["calibration payload was not provided"]
+            },
+            "synchronization": sync_report,
+            "reasons": ["calibrated multi-view 3D was not used"],
+        }
 
     ok_snaps = [
         AngleSnapshot(
@@ -641,10 +722,12 @@ def analyze_session(
             views=views,
             person_index=person_index,
             release_angles_merged={},
+            reconstruction_quality=reconstruction_quality,
             error="No view produced usable angles.",
         )
     return SessionAnalysis(
         views=views,
         person_index=person_index,
         release_angles_merged=merged.as_dict(),
+        reconstruction_quality=reconstruction_quality,
     )

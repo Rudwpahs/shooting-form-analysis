@@ -7,6 +7,13 @@ import sqlite3
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+from .provenance import (
+    ClipProvenance,
+    is_matchable,
+    normalize_profile_status,
+    profile_status_from_clips,
+)
+
 ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_DB = ROOT / "data" / "shooting_angles.db"
 LEGACY_JSON = ROOT / "models" / "nba_player_models.json"
@@ -19,7 +26,11 @@ CREATE TABLE IF NOT EXISTS players (
     hand TEXT DEFAULT 'right',
     source TEXT DEFAULT 'self_measured',
     notes TEXT DEFAULT '',
-    created_at TEXT DEFAULT CURRENT_TIMESTAMP
+    verification_status TEXT DEFAULT 'unverified_legacy',
+    verification_reasons_json TEXT DEFAULT '[]',
+    provenance_json TEXT DEFAULT '{}',
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS player_angles (
@@ -55,6 +66,17 @@ CREATE TABLE IF NOT EXISTS player_timelines (
     UNIQUE(player_key, view),
     FOREIGN KEY(player_key) REFERENCES players(player_key) ON DELETE CASCADE
 );
+
+CREATE TABLE IF NOT EXISTS player_reference_clips (
+    clip_id TEXT PRIMARY KEY,
+    player_key TEXT NOT NULL,
+    source_url TEXT NOT NULL,
+    provenance_json TEXT NOT NULL,
+    approval_status TEXT NOT NULL DEFAULT 'draft',
+    created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY(player_key) REFERENCES players(player_key) ON DELETE CASCADE
+);
 """
 
 
@@ -63,7 +85,23 @@ def connect(db_path: Path = DEFAULT_DB) -> sqlite3.Connection:
     conn = sqlite3.connect(str(db_path))
     conn.row_factory = sqlite3.Row
     conn.executescript(SCHEMA)
+    _migrate_players_table(conn)
     return conn
+
+
+def _migrate_players_table(conn: sqlite3.Connection) -> None:
+    """Add verification columns for databases created before provenance support."""
+    existing = {str(row["name"]) for row in conn.execute("PRAGMA table_info(players)")}
+    additions = {
+        "verification_status": "TEXT DEFAULT 'unverified_legacy'",
+        "verification_reasons_json": "TEXT DEFAULT '[]'",
+        "provenance_json": "TEXT DEFAULT '{}'",
+        "updated_at": "TEXT DEFAULT CURRENT_TIMESTAMP",
+    }
+    for column, definition in additions.items():
+        if column not in existing:
+            conn.execute(f"ALTER TABLE players ADD COLUMN {column} {definition}")
+    conn.commit()
 
 
 def upsert_player(
@@ -76,17 +114,33 @@ def upsert_player(
     hand: str = "right",
     source: str = "self_measured",
     space: str = "3d",
+    verification_status: Optional[str] = None,
+    verification_reasons: Optional[List[str]] = None,
+    provenance: Optional[Dict[str, Any]] = None,
 ) -> None:
+    status = normalize_profile_status(verification_status) if verification_status else None
+    reasons_json = json.dumps(verification_reasons or []) if verification_reasons is not None else None
+    provenance_json = json.dumps(provenance or {}) if provenance is not None else None
     conn.execute(
         """
-        INSERT INTO players(player_key, display_name, hand, source)
-        VALUES (?, ?, ?, ?)
+        INSERT INTO players(
+            player_key, display_name, hand, source, verification_status,
+            verification_reasons_json, provenance_json, updated_at
+        )
+        VALUES (?, ?, ?, ?, COALESCE(?, 'unverified_legacy'), COALESCE(?, '[]'), COALESCE(?, '{}'), CURRENT_TIMESTAMP)
         ON CONFLICT(player_key) DO UPDATE SET
             display_name=excluded.display_name,
             hand=excluded.hand,
-            source=excluded.source
+            source=excluded.source,
+            verification_status=COALESCE(?, players.verification_status),
+            verification_reasons_json=COALESCE(?, players.verification_reasons_json),
+            provenance_json=COALESCE(?, players.provenance_json),
+            updated_at=CURRENT_TIMESTAMP
         """,
-        (player_key, display_name, hand, source),
+        (
+            player_key, display_name, hand, source, status, reasons_json, provenance_json,
+            status, reasons_json, provenance_json,
+        ),
     )
     conn.execute(
         """
@@ -139,10 +193,101 @@ def upsert_timeline(
     conn.commit()
 
 
-def list_player_catalog(conn: sqlite3.Connection, view: str = "merged") -> List[Dict[str, Any]]:
+def upsert_reference_clip(conn: sqlite3.Connection, clip: ClipProvenance) -> list[str]:
+    """Store a reviewed source clip and return contract violations, if any."""
+    errors = clip.validation_errors()
+    approval = "approved" if not errors else "rejected"
+    conn.execute(
+        """
+        INSERT INTO player_reference_clips(clip_id, player_key, source_url, provenance_json, approval_status, updated_at)
+        VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+        ON CONFLICT(clip_id) DO UPDATE SET
+            player_key=excluded.player_key,
+            source_url=excluded.source_url,
+            provenance_json=excluded.provenance_json,
+            approval_status=excluded.approval_status,
+            updated_at=CURRENT_TIMESTAMP
+        """,
+        (clip.clip_id, clip.player_key, clip.source_url, json.dumps(clip.to_dict()), approval),
+    )
+    conn.commit()
+    return errors
+
+
+def set_player_verification(
+    conn: sqlite3.Connection,
+    player_key: str,
+    status: str,
+    *,
+    reasons: Optional[List[str]] = None,
+    provenance: Optional[Dict[str, Any]] = None,
+) -> None:
+    conn.execute(
+        """
+        UPDATE players
+        SET verification_status = ?,
+            verification_reasons_json = ?,
+            provenance_json = COALESCE(?, provenance_json),
+            updated_at = CURRENT_TIMESTAMP
+        WHERE player_key = ?
+        """,
+        (
+            normalize_profile_status(status),
+            json.dumps(reasons or []),
+            json.dumps(provenance) if provenance is not None else None,
+            player_key,
+        ),
+    )
+    conn.commit()
+
+
+def refresh_player_verification(
+    conn: sqlite3.Connection,
+    player_key: str,
+    *,
+    canonical_3d_verified: bool = False,
+) -> tuple[str, List[str]]:
+    """Recompute a profile status from the persisted clip provenance contract."""
+    rows = conn.execute(
+        "SELECT provenance_json FROM player_reference_clips WHERE player_key = ? ORDER BY clip_id",
+        (player_key,),
+    ).fetchall()
+    clips: List[Dict[str, Any]] = []
+    for row in rows:
+        decoded = _decode_json_object(row["provenance_json"])
+        if decoded:
+            clips.append(decoded)
+    status, reasons = profile_status_from_clips(
+        clips,
+        player_key=player_key,
+        canonical_3d_verified=canonical_3d_verified,
+    )
+    set_player_verification(
+        conn,
+        player_key,
+        status,
+        reasons=reasons,
+        provenance={
+            "approved_clip_count": sum(
+                1 for clip in clips if not ClipProvenance.from_mapping(clip).validation_errors()
+            ),
+            "reference_clip_count": len(clips),
+            "verification_version": "provenance_v1",
+        },
+    )
+    return status, reasons
+
+
+def list_player_catalog(
+    conn: sqlite3.Connection,
+    view: str = "merged",
+    *,
+    verified_only: bool = False,
+) -> List[Dict[str, Any]]:
     rows = conn.execute(
         """
         SELECT p.player_key, p.display_name, p.hand, p.source,
+               p.verification_status, p.verification_reasons_json, p.provenance_json,
                a.elbow, a.shoulder, a.hip, a.knee, a.space, a.view
         FROM players p
         JOIN player_angles a ON a.player_key = p.player_key
@@ -159,6 +304,9 @@ def list_player_catalog(conn: sqlite3.Connection, view: str = "merged") -> List[
                 "display_name": row["display_name"],
                 "hand": row["hand"],
                 "source": row["source"],
+                "verification_status": str(row["verification_status"] or "unverified_legacy"),
+                "verification_reasons": _decode_json_list(row["verification_reasons_json"]),
+                "provenance": _decode_json_object(row["provenance_json"]),
                 "space": row["space"],
                 "view": row["view"],
                 "angles": {
@@ -169,14 +317,19 @@ def list_player_catalog(conn: sqlite3.Connection, view: str = "merged") -> List[
                 },
             }
         )
-    return catalog
+    return [row for row in catalog if not verified_only or is_matchable(row["verification_status"])]
 
 
-def list_player_angle_rows(conn: sqlite3.Connection) -> List[Dict[str, Any]]:
+def list_player_angle_rows(
+    conn: sqlite3.Connection,
+    *,
+    verified_only: bool = False,
+) -> List[Dict[str, Any]]:
     """Every player_key + view angle row for view-aware matching."""
     rows = conn.execute(
         """
         SELECT p.player_key, p.display_name, p.hand, p.source,
+               p.verification_status, p.verification_reasons_json, p.provenance_json,
                a.elbow, a.shoulder, a.hip, a.knee, a.space, a.view
         FROM players p
         JOIN player_angles a ON a.player_key = p.player_key
@@ -204,6 +357,9 @@ def list_player_angle_rows(conn: sqlite3.Connection) -> List[Dict[str, Any]]:
                 "display_name": row["display_name"],
                 "hand": row["hand"],
                 "source": row["source"],
+                "verification_status": str(row["verification_status"] or "unverified_legacy"),
+                "verification_reasons": _decode_json_list(row["verification_reasons_json"]),
+                "provenance": _decode_json_object(row["provenance_json"]),
                 "space": row["space"],
                 "view": row["view"],
                 "angles": {
@@ -215,7 +371,7 @@ def list_player_angle_rows(conn: sqlite3.Connection) -> List[Dict[str, Any]]:
                 "timeline": timelines.get((str(row["player_key"]), str(row["view"])), []),
             }
         )
-    return catalog
+    return [row for row in catalog if not verified_only or is_matchable(row["verification_status"])]
 
 
 def get_player_skeleton_source(conn: sqlite3.Connection, player_key: str) -> Optional[Dict[str, Any]]:
@@ -223,6 +379,7 @@ def get_player_skeleton_source(conn: sqlite3.Connection, player_key: str) -> Opt
     profile = conn.execute(
         """
         SELECT p.player_key, p.display_name, p.hand, p.source,
+               p.verification_status, p.verification_reasons_json, p.provenance_json,
                a.elbow, a.shoulder, a.hip, a.knee, a.space, a.view
         FROM players p
         JOIN player_angles a ON a.player_key = p.player_key
@@ -265,6 +422,9 @@ def get_player_skeleton_source(conn: sqlite3.Connection, player_key: str) -> Opt
         "display_name": str(profile["display_name"]),
         "hand": str(profile["hand"] or "right"),
         "source": str(profile["source"] or ""),
+        "verification_status": str(profile["verification_status"] or "unverified_legacy"),
+        "verification_reasons": _decode_json_list(profile["verification_reasons_json"]),
+        "provenance": _decode_json_object(profile["provenance_json"]),
         "space": str(profile["space"] or "3d"),
         "view": timeline_view,
         "fps": fps,
@@ -276,6 +436,22 @@ def get_player_skeleton_source(conn: sqlite3.Connection, player_key: str) -> Opt
         },
         "samples": samples,
     }
+
+
+def _decode_json_list(value: Any) -> List[Any]:
+    try:
+        decoded = json.loads(value or "[]")
+    except (TypeError, ValueError, json.JSONDecodeError):
+        decoded = []
+    return decoded if isinstance(decoded, list) else []
+
+
+def _decode_json_object(value: Any) -> Dict[str, Any]:
+    try:
+        decoded = json.loads(value or "{}")
+    except (TypeError, ValueError, json.JSONDecodeError):
+        decoded = {}
+    return decoded if isinstance(decoded, dict) else {}
 
 
 def save_session(

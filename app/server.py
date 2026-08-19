@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import os
 import tempfile
 from pathlib import Path
@@ -9,15 +10,19 @@ from pathlib import Path
 from flask import Flask, jsonify, request, send_from_directory
 
 from .analyze import VIEW_TAGS, analyze_session, list_people_in_video, release_score
+from .calibration import parse_calibration_payload
 from .db import (
     connect,
     ensure_seeded,
     get_player_skeleton_source,
     list_player_angle_rows,
     list_player_catalog,
+    refresh_player_verification,
     save_session,
     upsert_player,
+    upsert_reference_clip,
 )
+from .provenance import ClipProvenance, is_verified_3d
 from .reconstruction3d import (
     SUPPORTED_CANONICAL_PLAYER_KEYS,
     load_canonical_player_skeleton,
@@ -78,20 +83,40 @@ def health():
     conn = connect()
     try:
         n = conn.execute("SELECT COUNT(*) AS c FROM player_angles").fetchone()["c"]
+        verified_2d = conn.execute(
+            "SELECT COUNT(*) AS c FROM players WHERE verification_status IN ('verified_2d', 'verified_3d')"
+        ).fetchone()["c"]
+        verified_3d = conn.execute(
+            "SELECT COUNT(*) AS c FROM players WHERE verification_status = 'verified_3d'"
+        ).fetchone()["c"]
     finally:
         conn.close()
-    return jsonify({"ok": True, "compare": "motion_dtw_with_angle_fallback", "players": n})
+    return jsonify(
+        {
+            "ok": True,
+            "compare": "verified_motion_reference_only",
+            "players": n,
+            "verified_2d_profiles": verified_2d,
+            "verified_3d_profiles": verified_3d,
+        }
+    )
 
 
 @app.get("/api/players")
 def players():
+    include_unverified = (request.args.get("include_unverified") or "").strip() == "1"
     conn = connect()
     try:
-        catalog = list_player_catalog(conn)
+        catalog = list_player_catalog(conn, verified_only=not include_unverified)
         catalog = _catalog_for_scope(
             catalog, (request.args.get("scope") or "").strip()
         )
-        return jsonify({"players": catalog})
+        return jsonify(
+            {
+                "players": catalog,
+                "publication_policy": "Only verified_2d and verified_3d profiles are matchable; only verified_3d profiles expose skeletons.",
+            }
+        )
     finally:
         conn.close()
 
@@ -106,30 +131,36 @@ def player_skeleton(player_key: str):
     if profile is None:
         return jsonify({"error": "Player does not have a compatible 3D profile."}), 404
 
+    if not is_verified_3d(profile["verification_status"]):
+        return jsonify(
+            {
+                "error": "Player has no verified 3D model.",
+                "player_key": profile["player_key"],
+                "verification_status": profile["verification_status"],
+                "verification_reasons": profile["verification_reasons"],
+                "provenance": profile["provenance"],
+            }
+        ), 409
+
     skeleton = (
         load_canonical_player_skeleton(player_key)
         if player_key in SUPPORTED_CANONICAL_PLAYER_KEYS
         else None
     )
     if skeleton is None:
-        if profile["samples"]:
-            skeleton = build_skeleton_timeline(
-                profile["samples"],
-                hand=profile["hand"],
-                view=profile["view"],
-                source_space=profile["space"],
-            )
-        else:
-            skeleton = release_skeleton(
-                profile["angles"],
-                hand=profile["hand"],
-                view=profile["view"],
-                source_space=profile["space"],
-            )
+        return jsonify(
+            {
+                "error": "Verified 3D status requires a published canonical model.",
+                "player_key": profile["player_key"],
+                "verification_status": profile["verification_status"],
+            }
+        ), 409
     return jsonify(
         {
             "player_key": profile["player_key"],
             "display_name": profile["display_name"],
+            "verification_status": profile["verification_status"],
+            "provenance": profile["provenance"],
             "skeleton": skeleton,
         }
     )
@@ -197,6 +228,19 @@ def _collect_videos():
     return out
 
 
+def _form_json_object(name: str):
+    raw = (request.form.get(name) or "").strip()
+    if not raw:
+        return None
+    try:
+        decoded = json.loads(raw)
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"{name} must be valid JSON: {exc.msg}") from exc
+    if not isinstance(decoded, dict):
+        raise ValueError(f"{name} must be a JSON object")
+    return decoded
+
+
 def _query_views(session):
     views = [
         {
@@ -229,12 +273,20 @@ def analyze():
     lang = request.form.get("lang") or "ko"
     target_player_key = (request.form.get("target_player_key") or "").strip()
     catalog_scope = (request.form.get("catalog_scope") or "").strip()
+    try:
+        calibration_payload = _form_json_object("calibration_json")
+        sync_payload = _form_json_object("sync_json")
+    except ValueError as exc:
+        for path, _ in videos:
+            path.unlink(missing_ok=True)
+        return jsonify({"error": str(exc)}), 400
+    calibration, calibration_input_report = parse_calibration_payload(calibration_payload)
 
     try:
         conn = connect()
         try:
             catalog = _catalog_for_scope(
-                list_player_angle_rows(conn), catalog_scope
+                list_player_angle_rows(conn, verified_only=True), catalog_scope
             )
             available_keys = {str(row["player_key"]) for row in catalog}
             if target_player_key and target_player_key not in available_keys:
@@ -247,6 +299,8 @@ def analyze():
                     hand=hand,
                     max_frames=max_frames,
                     auto_person=False,
+                    calibration=calibration,
+                    sync_payload=sync_payload,
                 )
                 if sess.error and not sess.release_angles_merged:
                     return None
@@ -280,6 +334,8 @@ def analyze():
                     hand=hand,
                     max_frames=max_frames,
                     auto_person=False,
+                    calibration=calibration,
+                    sync_payload=sync_payload,
                 )
                 if session.error and not session.release_angles_merged:
                     return jsonify({"error": session.error, "analysis": session.to_dict()}), 422
@@ -317,8 +373,9 @@ def analyze():
                 "selected_match": selected.to_dict() if selected else None,
                 "target_player_key": target_player_key or None,
                 "feedback": feedback,
-                "note": "With 2–3 camera views, release angles come from multi-view triangulation (assumed front/side/oblique yaw). Single-view uses MediaPipe world landmarks. Similarity uses degrees only — not limb length or height.",
-                "disclaimer": "Player angle profiles are unofficial self-measured estimates, not affiliated with any league or athlete.",
+                "note": "Single-view output is pose-estimated 2D/monocular analysis. Verified 3D requires ball-verified, calibrated, synchronized multi-view input and a published canonical model.",
+                "calibration_input": calibration_input_report,
+                "disclaimer": "Only human-approved, provenance-complete player references are eligible for matching. Results do not identify an athlete.",
             }
         )
     finally:
@@ -345,11 +402,43 @@ def add_player():
             view=data.get("view") or "merged",
             hand=data.get("hand") or "right",
             source=data.get("source") or "self_measured",
-            space=data.get("space") or "3d",
+            space=data.get("space") or "2d",
+            verification_status="draft",
+            verification_reasons=["requires approved source provenance before publication"],
         )
     finally:
         conn.close()
     return jsonify({"ok": True, "player_key": key})
+
+
+@app.post("/api/reference-clips")
+def add_reference_clip():
+    """Register a reviewed clip and recompute that player's publication state."""
+    data = request.get_json(force=True, silent=True) or {}
+    clip = ClipProvenance.from_mapping(data)
+    if not clip.clip_id or not clip.player_key:
+        return jsonify({"error": "clip_id and player_key required"}), 400
+    conn = connect()
+    try:
+        exists = conn.execute(
+            "SELECT 1 FROM players WHERE player_key = ?", (clip.player_key,)
+        ).fetchone()
+        if exists is None:
+            return jsonify({"error": "player_key must exist before registering reference clips"}), 404
+        errors = upsert_reference_clip(conn, clip)
+        status, reasons = refresh_player_verification(conn, clip.player_key)
+    finally:
+        conn.close()
+    return jsonify(
+        {
+            "ok": not errors,
+            "clip_id": clip.clip_id,
+            "player_key": clip.player_key,
+            "clip_errors": errors,
+            "verification_status": status,
+            "verification_reasons": reasons,
+        }
+    ), (201 if not errors else 422)
 
 
 def main():

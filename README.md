@@ -11,10 +11,11 @@ Experimental coaching aid — not a biomechanical or medical assessment.
 1. Upload 1–3 camera views (side / front / oblique)
 2. Select the person in the clip
 3. Normalize all 33 landmarks by torso scale and shooting hand (no height / limb-length advantage)
-4. Match the complete catch-to-follow-through motion with phase-aligned DTW
-5. Compare with a selected player and independently find the nearest player
-6. Retarget player and user motion onto the same general-adult skeleton
-7. Rotate, zoom, scrub, and play catch-to-follow-through 3D landmark timelines
+4. Verify a basketball shot with shooter continuity plus hand–ball separation and upward ball motion evidence
+5. Match the complete catch-to-follow-through motion only against human-approved, provenance-complete player references
+6. Return single-view pose analysis as **unverified** when ball or capture evidence is insufficient
+7. Use calibrated, synchronized multi-view DLT triangulation only after a 3D quality gate
+8. Publish a player skeleton only when its profile is `verified_3d` and a canonical model is present
 
 ## Run locally
 
@@ -25,15 +26,15 @@ python run.py
 ```
 
 ```bash
+pip install -r requirements-data.txt  # required for full reconstruction tests / data scripts
 python -m unittest discover -s tests -v
 python scripts/validate_motion_dataset.py --min-clips 3
+python scripts/import_reference_manifest.py data/reference_clips/curry_reference_v1.jsonl --strict
 ```
 
-Player models are learned from quality-filtered public shooting/form footage.
-The committed candidate catalog stores metadata and source URLs only; downloaded
-videos are temporary and are not redistributed. To rebuild data, install
-`requirements-data.txt`, run `scripts/build_youtube_catalog.py`, then
-`scripts/discover_allstar_players.py`.
+Legacy player profiles remain visible for review but are now isolated as `unverified_legacy`; they cannot be matched or rendered as 3D models. A matchable profile requires at least three independent, human-approved clips with a complete source, real-footage, player-identity, shot-event, and frame-label record. A `verified_3d` profile additionally requires a published canonical model from calibrated, synchronized multi-view capture.
+
+The committed candidate catalog stores metadata and source URLs only; downloaded videos are temporary and are not redistributed. Do not use automated search results as player reference data without filling the provenance contract and manual review. See [Verified 3D Capture](docs/VERIFIED_3D_CAPTURE.md) for the exact manifest, capture, calibration, synchronization, and publication procedure.
 
 ## Deploy (GitHub → Render)
 
@@ -57,9 +58,10 @@ Render Free services sleep after inactivity and can take about a minute to start
 
 ## Limitations
 
-- Release is selected from a temporally valid wrist-rise/arm-extension window; unusual edits can still confuse it.
-- Camera angle, framing, and occlusion affect results.
-- Monocular landmark depth is an estimate, not calibrated multi-camera biomechanics.
-- Skeletons use fixed ordinary-adult proportions; they visualize angle motion and do not reproduce an athlete's actual body dimensions.
-- Player profiles are unofficial measurements from public footage, not affiliated with any league/athlete.
+- The baseline basketball detector is color/circle based; it can reject valid shots under motion blur, unusual ball colors, or poor lighting. Rejection is safer than treating a pose-only wrist peak as a confirmed shot.
+- Camera angle, framing, fast movement, and occlusion affect pose results.
+- Monocular landmark depth is an estimate, not calibrated multi-camera biomechanics. The API labels it pose-only and will not publish it as verified 3D.
+- 3D requires same-trial calibrated, synchronized views, ball-verified shot evidence, and reprojection/bone/temporal quality gates.
+- Skeletons use fixed ordinary-adult proportions unless a verified subject-specific model is supplied; they do not reproduce an athlete's actual body dimensions.
+- `verified_2d` player references are unofficial coaching references, not athlete identification or league-affiliated measurements.
 - Legacy Streamlit (`web_app.py`) / Next site (`website/`) are not used for deploy.
