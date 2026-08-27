@@ -9,9 +9,10 @@ import numpy as np
 try:
     import mediapipe as mp
 except Exception as exc:
-    raise RuntimeError(
-        "Failed to import 'mediapipe'. Install the official package with: pip install mediapipe"
-    ) from exc
+    mp = None
+    MEDIAPIPE_IMPORT_ERROR = exc
+else:
+    MEDIAPIPE_IMPORT_ERROR = None
 
 try:
     from ultralytics import YOLO
@@ -85,6 +86,11 @@ def _create_tasks_pose_detector(fps: float):
 
 
 def create_pose_detector(fps: float = 30.0):
+    if mp is None:
+        raise RuntimeError(
+            "Failed to import the official 'mediapipe' package. "
+            "Install or upgrade it with: pip install --upgrade mediapipe"
+        ) from MEDIAPIPE_IMPORT_ERROR
     if hasattr(mp, "solutions") and hasattr(mp.solutions, "pose"):
         return _create_solutions_pose_detector()
     return _create_tasks_pose_detector(fps=fps)
@@ -445,5 +451,19 @@ def main():
         process_single_video(args)
 
 
+def is_running_with_streamlit() -> bool:
+    """Return whether this file is being executed by a Streamlit runtime."""
+    try:
+        from streamlit.runtime import exists
+    except ImportError:
+        return False
+    return exists()
+
+
 if __name__ == "__main__":
-    main()
+    if is_running_with_streamlit():
+        from web_app import run_app
+
+        run_app()
+    else:
+        main()
