@@ -7,7 +7,7 @@
 ---
 
 **Project:** Shooting Form Analysis
-**Generated:** 2026-08-13 15:47:50
+**Design snapshot:** 2026-08-13 15:47:50
 **Category:** Sports Team/Club
 
 ---
