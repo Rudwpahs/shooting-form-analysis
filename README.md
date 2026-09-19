@@ -105,6 +105,12 @@ python scripts/build_youtube_catalog.py
 python scripts/discover_allstar_players.py
 ```
 
+## 이 저장소의 역할
+
+이 저장소는 **Flask 기반으로 pose 정규화와 DTW 비교 아이디어를 빠르게 검증하는 분석 실험**입니다.
+
+제품 중심의 FormPath 앱은 `Rudwpahs/shooting-profile-coach-ios`에서 따로 관리합니다. 여기서는 분석 로직을 이해하고 비교 실험을 반복하는 데 집중하고, iPhone 제품 흐름이나 데이터 등급 정책은 FormPath 저장소를 기준으로 봅니다.
+
 ## 구조
 
 | 경로 | 역할 |
