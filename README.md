@@ -1,84 +1,69 @@
-# Shooting Form Analysis
+<div align="center">
 
-농구 슛 영상을 보고 “누구랑 비슷해 보인다” 정도에서 끝내지 않고, **관절 움직임 전체를 같은 기준으로 맞춘 뒤 비교해보려고 만든 실험용 분석기**입니다.
+# 🎯 Shooting Form Analysis
 
-Flask 웹앱에서 1~3개 시점의 영상을 올리고, MediaPipe pose를 이용해 catch부터 follow-through까지의 움직임을 비교합니다.
+### Compare the motion, not just the silhouette.
+
+농구 슛 영상을 **pose 정규화 + phase alignment + DTW**로 비교하는 Flask 기반 분석 실험입니다.
+
+<p>
+  <img alt="Python" src="https://img.shields.io/badge/Python-3776AB?logo=python&logoColor=white">
+  <img alt="MediaPipe" src="https://img.shields.io/badge/MediaPipe-Pose-00A67E?logo=google&logoColor=white">
+  <img alt="Flask" src="https://img.shields.io/badge/Flask-Web_App-000000?logo=flask&logoColor=white">
+  <img alt="DTW" src="https://img.shields.io/badge/Similarity-phase--aligned_DTW-6f42c1">
+</p>
+
+[Pipeline](#analysis-pipeline) · [Features](#features) · [Data](#data-handling) · [Limits](#limits)
+
+</div>
+
+---
+
+“누구랑 비슷해 보인다” 정도에서 끝내지 않고, **관절 움직임 전체를 같은 기준으로 맞춘 뒤 비교**하려고 만든 실험용 분석기입니다.
 
 > 이 프로젝트는 코칭 보조 실험입니다. 의료·재활·정밀 생체역학 측정 도구가 아닙니다.
 
-## 분석 알고리즘
+## Analysis pipeline
 
-### 1. Pose 추출
-
-```text
-영상 업로드
-   ↓
-분석할 사람 선택
-   ↓
-각 frame에서 MediaPipe 33 landmarks 추출
-   ↓
-유효한 pose sequence 구성
+```mermaid
+flowchart LR
+    A[1–3 view videos] --> B[MediaPipe 33 landmarks]
+    B --> C[Center + torso scale normalize]
+    C --> D[Shooting-side normalize]
+    D --> E[Catch / Set / Release / Follow-through]
+    E --> F[Phase-aligned DTW]
+    F --> G[Player profile distances]
+    G --> H[Detailed comparison + nearest player]
 ```
 
-### 2. 체형 영향 줄이기
+### Why normalize?
 
-단순 픽셀 좌표를 그대로 비교하면 키나 카메라 거리 때문에 결과가 흔들립니다.
+픽셀 좌표를 그대로 비교하면 키와 카메라 거리가 결과에 크게 섞입니다.
 
 ```text
 33 landmarks
-   ↓
-몸통을 기준으로 중심 정렬
-   ↓
-torso scale로 크기 정규화
-   ↓
-오른손 / 왼손 shooting side 정렬
+→ torso-centered
+→ torso-scale normalized
+→ right/left shooting side aligned
 ```
 
-이렇게 하면 팔이 실제로 더 긴 사람이라는 이유만으로 비슷하거나 다르다고 판정되는 영향을 줄일 수 있습니다.
+### Why DTW?
 
-### 3. 슛 시간축 맞추기
+두 사람이 같은 속도로 슛하지 않기 때문에 frame 번호를 그대로 맞추지 않습니다. DTW는 조금 빠르거나 느린 움직임도 **동작 phase 기준으로 대응**시킬 수 있게 해줍니다.
 
-두 사람이 슛을 같은 속도로 하지 않기 때문에 frame 번호끼리 바로 비교하지 않습니다.
+## Features
 
-```text
-catch → set → release → follow-through phase 검출
-        ↓
-phase 경계를 기준으로 sequence 정렬
-        ↓
-phase-aligned DTW
-        ↓
-서로 대응되는 동작 frame 탐색
-        ↓
-전체 움직임 distance 계산
-```
+| Feature | Description |
+|---|---|
+| Multi-view input | side / front / oblique 1–3개 시점 |
+| Shooter selection | 영상 속 분석 대상 선택 |
+| Pose normalization | 33 landmark 정규화 |
+| Phase comparison | catch → follow-through alignment |
+| Similarity | phase-aligned DTW |
+| Player search | selected player + nearest player |
+| Motion view | 공통 skeleton 3D timeline / scrub / rotate |
 
-DTW(Dynamic Time Warping)는 한 사람이 조금 빨리 움직이고 다른 사람이 조금 느리게 움직여도 비슷한 동작 구간끼리 대응시킬 수 있게 해줍니다.
-
-### 4. 선수 비교
-
-```text
-사용자 normalized motion
-        ↓
-각 player profile과 같은 방식으로 DTW distance 계산
-        ↓
-distance가 작은 순서로 비교
-        ↓
-선택한 선수와의 상세 비교 + nearest player 표시
-```
-
-시각화에서는 선수와 사용자의 motion을 같은 일반 성인 skeleton 비율로 retarget해서 **각도와 움직임 차이**에 집중합니다.
-
-## 기능
-
-1. side / front / oblique 1~3개 시점 업로드
-2. 영상 속 분석 대상 선택
-3. 33 landmark 정규화
-4. phase-aligned DTW 비교
-5. 선택 선수 비교와 nearest-player 탐색
-6. 공통 skeleton으로 motion retarget
-7. 3D timeline 회전·확대·scrub·재생
-
-## 실행
+## Run
 
 ```bash
 pip install -r requirements.txt
@@ -93,11 +78,9 @@ python -m unittest discover -s tests -v
 python scripts/validate_motion_dataset.py --min-clips 3
 ```
 
-## 데이터 처리
+## Data handling
 
-선수 모델은 품질 필터를 통과한 공개 슈팅 영상에서 학습용 motion profile을 만듭니다. 저장소에는 candidate metadata와 source URL만 남기고, 다운로드한 원본 영상 자체를 재배포하지 않습니다.
-
-데이터를 다시 만들려면:
+선수 model은 quality filter를 통과한 공개 슈팅 영상에서 분석용 motion profile을 만듭니다. 저장소에는 candidate metadata와 source URL만 남기고 다운로드한 원본 영상 자체는 재배포하지 않습니다.
 
 ```bash
 pip install -r requirements-data.txt
@@ -105,30 +88,33 @@ python scripts/build_youtube_catalog.py
 python scripts/discover_allstar_players.py
 ```
 
-## 이 저장소의 역할
+## Where this repo fits
 
-이 저장소는 **Flask 기반으로 pose 정규화와 DTW 비교 아이디어를 빠르게 검증하는 분석 실험**입니다.
+```text
+shooting-form-analysis       = 빠른 pose / DTW 분석 실험
+shooting-profile-coach-ios   = FormPath 제품 중심 저장소
+```
 
-제품 중심의 FormPath 앱은 `Rudwpahs/shooting-profile-coach-ios`에서 따로 관리합니다. 여기서는 분석 로직을 이해하고 비교 실험을 반복하는 데 집중하고, iPhone 제품 흐름이나 데이터 등급 정책은 FormPath 저장소를 기준으로 봅니다.
+제품의 iPhone flow와 데이터 등급 정책은 `Rudwpahs/shooting-profile-coach-ios`를 기준으로 봅니다.
 
-## 구조
+## Structure
 
-| 경로 | 역할 |
+| Path | Role |
 |---|---|
-| `app/` | pose, 각도, similarity, DB, Flask API |
-| `static/` | 웹 UI |
-| `models/` | motion profile, source catalog, validation report |
-| `scripts/` | 데이터 탐색·학습·검증 |
+| `app/` | pose, angles, similarity, DB, Flask API |
+| `static/` | web UI |
+| `models/` | motion profiles, catalog, validation report |
+| `scripts/` | data discovery / build / validation |
 | `data/` | runtime SQLite |
 | `Dockerfile` | production image |
-| `design-system/` | UI 규칙 |
+| `design-system/` | UI rules |
 
-## 한계
+## Limits
 
 - 카메라 각도, framing, 가림에 영향을 받습니다.
 - monocular landmark depth는 실제 계측된 3D가 아닙니다.
-- 고정 skeleton은 선수의 실제 신체 치수를 재현하지 않습니다.
-- player profile은 공개 영상에서 계산한 비공식 분석값이며 선수·리그와 제휴된 데이터가 아닙니다.
+- fixed skeleton은 실제 선수 신체 치수를 재현하지 않습니다.
+- 공개 영상 기반 player profile은 비공식 분석값입니다.
 - 특이한 편집 영상에서는 release 구간 검출이 틀릴 수 있습니다.
 
 Render 배포 설정은 `DEPLOYMENT.md`에 있습니다.
